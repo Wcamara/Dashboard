@@ -1,0 +1,443 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #080b10;
+    --card: #11161f;
+    --card-secondary: #0d121a;
+    --border: #202733;
+
+    --text: #f4f7fb;
+    --muted: #7d8590;
+
+    --accent: #5b8cff;
+    --green: #38d996;
+    --yellow: #f6c453;
+    --red: #ff647c;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    background: var(--bg);
+    color: var(--text);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+body {
+    min-height: 100vh;
+}
+
+button {
+    font: inherit;
+}
+
+.app {
+    max-width: 760px;
+
+    margin: 0 auto;
+
+    padding:
+        calc(18px + env(safe-area-inset-top))
+        18px
+        calc(105px + env(safe-area-inset-bottom));
+}
+
+
+/* HEADER */
+
+.header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 26px;
+}
+
+.eyebrow,
+.section-eyebrow {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 1.3px;
+}
+
+.header h1 {
+    margin: 5px 0 3px;
+
+    font-size: 28px;
+    letter-spacing: -0.8px;
+}
+
+.header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 13px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    color: var(--accent);
+
+    font-weight: 700;
+}
+
+
+/* MÉTRICAS */
+
+.metrics {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+.metric-card {
+    min-height: 120px;
+
+    padding: 17px;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+}
+
+.metric-label {
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+.metric-value {
+    margin-top: 13px;
+
+    font-size: 23px;
+
+    letter-spacing: -0.7px;
+}
+
+.metric-detail {
+    margin-top: 4px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.metric-detail.positive {
+    color: var(--green);
+}
+
+
+/* SEÇÕES */
+
+.section {
+    margin-top: 30px;
+}
+
+.section-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-end;
+
+    margin-bottom: 12px;
+}
+
+.section h2 {
+    margin: 4px 0 0;
+
+    font-size: 17px;
+}
+
+.text-button {
+    padding: 5px;
+
+    border: none;
+    background: transparent;
+
+    color: var(--accent);
+
+    cursor: pointer;
+}
+
+.add-button {
+    width: 34px;
+    height: 34px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--text);
+
+    font-size: 21px;
+
+    cursor: pointer;
+}
+
+
+/* ESTUDO */
+
+.study-card {
+    padding: 18px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+}
+
+.study-area {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--accent);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+.study-card strong {
+    font-size: 16px;
+}
+
+.progress-info {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-top: 18px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.progress-track {
+    height: 7px;
+
+    margin-top: 7px;
+
+    overflow: hidden;
+
+    background: #1a202b;
+
+    border-radius: 999px;
+}
+
+.progress-bar {
+    height: 100%;
+
+    background: var(--accent);
+
+    border-radius: inherit;
+}
+
+
+/* TAREFAS */
+
+.task-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.task {
+    min-height: 68px;
+
+    padding: 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+}
+
+.task-check {
+    width: 20px;
+    height: 20px;
+
+    flex: 0 0 auto;
+
+    border-radius: 50%;
+
+    border: 1.5px solid #596273;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.task-content {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+.task-content strong {
+    font-size: 13px;
+}
+
+.task-content span {
+    margin-top: 3px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.task-status {
+    padding: 4px 7px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(246, 196, 83, 0.10);
+
+    border:
+        1px solid
+        rgba(246, 196, 83, 0.20);
+
+    color: var(--yellow);
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* NAVEGAÇÃO */
+
+.bottom-nav {
+    position: fixed;
+
+    left: 50%;
+    bottom: 12px;
+
+    transform: translateX(-50%);
+
+    width: calc(100% - 24px);
+
+    max-width: 724px;
+
+    padding:
+        7px
+        8px
+        calc(7px + env(safe-area-inset-bottom));
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    background:
+        rgba(17, 22, 31, 0.96);
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+}
+
+.nav-item {
+    min-height: 49px;
+
+    border: none;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 3px;
+
+    background: transparent;
+
+    color: var(--muted);
+
+    cursor: pointer;
+}
+
+.nav-item span {
+    font-size: 16px;
+}
+
+.nav-item small {
+    font-size: 9px;
+}
+
+.nav-item.active {
+    background: #171d28;
+
+    color: var(--accent);
+}
+
+
+/* MOBILE PEQUENO */
+
+@media (max-width: 380px) {
+
+    .app {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+
+    .metric-value {
+        font-size: 20px;
+    }
+}
