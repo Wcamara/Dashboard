@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <title>Command Center</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <!-- HEADER -->
+        <header class="header">
+
+            <div>
+                <span class="eyebrow">
+                    COMMAND CENTER
+                </span>
+
+                <h1 id="greeting">
+                    Boa noite
+                </h1>
+
+                <p>
+                    Sua rotina em um só lugar.
+                </p>
+            </div>
+
+            <div class="avatar" id="avatar">
+                W
+            </div>
+
+        </header>
+
+
+        <!-- MÉTRICAS -->
+        <section class="metrics">
+
+            <article class="metric-card">
+
+                <span class="metric-label">
+                    Saldo
+                </span>
+
+                <strong class="metric-value">
+                    R$ 0,00
+                </strong>
+
+                <span class="metric-detail positive">
+                    Saldo atual
+                </span>
+
+            </article>
+
+
+            <article class="metric-card">
+
+                <span class="metric-label">
+                    Tarefas
+                </span>
+
+                <strong class="metric-value">
+                    0
+                </strong>
+
+                <span class="metric-detail">
+                    Pendentes
+                </span>
+
+            </article>
+
+        </section>
+
+
+        <!-- ESTUDOS -->
+        <section class="section">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="section-eyebrow">
+                        ESTUDOS
+                    </span>
+
+                    <h2>
+                        Continuar estudando
+                    </h2>
+                </div>
+
+                <button
+                    class="text-button"
+                    type="button"
+                    data-page="studies"
+                >
+                    Ver todos
+                </button>
+
+            </div>
+
+
+            <article class="study-card">
+
+                <span class="study-area">
+                    CYBERSECURITY
+                </span>
+
+                <strong>
+                    SQL Injection
+                </strong>
+
+                <div class="progress-info">
+                    <span>Progresso</span>
+                    <span>70%</span>
+                </div>
+
+                <div class="progress-track">
+                    <div
+                        class="progress-bar"
+                        style="width: 70%"
+                    ></div>
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- TAREFAS -->
+        <section class="section">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="section-eyebrow">
+                        TAREFAS
+                    </span>
+
+                    <h2>
+                        Próximas
+                    </h2>
+                </div>
+
+                <button
+                    class="add-button"
+                    type="button"
+                    id="newTaskButton"
+                >
+                    +
+                </button>
+
+            </div>
+
+
+            <div class="task-list">
+
+                <article class="task">
+
+                    <button
+                        class="task-check"
+                        type="button"
+                        aria-label="Concluir tarefa"
+                    ></button>
+
+                    <div class="task-content">
+                        <strong>
+                            Estudar PortSwigger
+                        </strong>
+
+                        <span>
+                            Hoje
+                        </span>
+                    </div>
+
+                    <span class="task-status">
+                        Pendente
+                    </span>
+
+                </article>
+
+
+                <article class="task">
+
+                    <button
+                        class="task-check"
+                        type="button"
+                        aria-label="Concluir tarefa"
+                    ></button>
+
+                    <div class="task-content">
+                        <strong>
+                            Pagar faculdade
+                        </strong>
+
+                        <span>
+                            Amanhã
+                        </span>
+                    </div>
+
+                    <span class="task-status">
+                        Pendente
+                    </span>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- NAVEGAÇÃO -->
+        <nav class="bottom-nav">
+
+            <button
+                class="nav-item active"
+                type="button"
+                data-page="home"
+            >
+                <span>⌂</span>
+                <small>Início</small>
+            </button>
+
+            <button
+                class="nav-item"
+                type="button"
+                data-page="finance"
+            >
+                <span>R$</span>
+                <small>Finanças</small>
+            </button>
+
+            <button
+                class="nav-item"
+                type="button"
+                data-page="tasks"
+            >
+                <span>✓</span>
+                <small>Tarefas</small>
+            </button>
+
+            <button
+                class="nav-item"
+                type="button"
+                data-page="studies"
+            >
+                <span>◫</span>
+                <small>Estudos</small>
+            </button>
+
+        </nav>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
