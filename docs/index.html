@@ -1,396 +1,637 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-  />
+  >
 
   <title>Command Center</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
 <body>
 
-  <main class="app">
+<main class="app">
 
-    <header class="header">
+  <!-- HEADER -->
+  <header class="header">
+
+    <div>
+      <span class="eyebrow">
+        COMMAND CENTER
+      </span>
+
+      <h1 id="greeting">
+        Olá
+      </h1>
+    </div>
+
+    <div
+      id="avatar"
+      class="avatar"
+    >
+      U
+    </div>
+
+  </header>
+
+
+  <!-- ================================================= -->
+  <!-- HOME -->
+  <!-- ================================================= -->
+
+  <section
+    id="page-home"
+    class="page active"
+  >
+
+    <div class="metrics">
+
+      <article class="metric-card">
+
+        <span>
+          Saldo
+        </span>
+
+        <strong id="homeBalance">
+          R$ 0,00
+        </strong>
+
+      </article>
+
+
+      <article class="metric-card">
+
+        <span>
+          Tarefas pendentes
+        </span>
+
+        <strong id="homePendingTasks">
+          0
+        </strong>
+
+      </article>
+
+    </div>
+
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-kicker">
+            TAREFAS
+          </span>
+
+          <h2>
+            Próximas tarefas
+          </h2>
+
+        </div>
+
+      </div>
+
+      <div
+        id="homeTasks"
+        class="list"
+      ></div>
+
+    </section>
+
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-kicker">
+            ESTUDOS
+          </span>
+
+          <h2>
+            Últimos estudos
+          </h2>
+
+        </div>
+
+      </div>
+
+      <div
+        id="homeStudies"
+        class="list"
+      ></div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ================================================= -->
+  <!-- TAREFAS -->
+  <!-- ================================================= -->
+
+  <section
+    id="page-tasks"
+    class="page"
+  >
+
+    <div class="page-title">
+
       <div>
-        <span class="eyebrow">COMMAND CENTER</span>
-        <h1 id="greeting">Olá</h1>
-      </div>
 
-      <div id="avatar" class="avatar">
-        U
-      </div>
-    </header>
+        <span class="section-kicker">
+          ORGANIZAÇÃO
+        </span>
 
-
-    <!-- HOME -->
-    <section id="page-home" class="page active">
-
-      <div class="metrics">
-
-        <article class="metric-card">
-          <span>Saldo</span>
-          <strong id="homeBalance">R$ 0,00</strong>
-        </article>
-
-        <article class="metric-card">
-          <span>Tarefas pendentes</span>
-          <strong id="homePendingTasks">0</strong>
-        </article>
+        <h2>
+          Tarefas
+        </h2>
 
       </div>
-
-
-      <section class="section">
-
-        <div class="section-header">
-          <div>
-            <span class="section-kicker">TAREFAS</span>
-            <h2>Próximas tarefas</h2>
-          </div>
-        </div>
-
-        <div id="homeTasks" class="list">
-          <div class="empty">
-            Nenhuma tarefa pendente.
-          </div>
-        </div>
-
-      </section>
-
-
-      <section class="section">
-
-        <div class="section-header">
-          <div>
-            <span class="section-kicker">ESTUDOS</span>
-            <h2>Últimos estudos</h2>
-          </div>
-        </div>
-
-        <div id="homeStudies" class="list">
-          <div class="empty">
-            Nenhum estudo cadastrado.
-          </div>
-        </div>
-
-      </section>
-
-    </section>
-
-
-    <!-- TAREFAS -->
-    <section id="page-tasks" class="page">
-
-      <div class="page-title">
-        <div>
-          <span class="section-kicker">ORGANIZAÇÃO</span>
-          <h2>Tarefas</h2>
-        </div>
-
-        <button
-          class="primary-button"
-          onclick="openTaskModal()"
-        >
-          + Nova
-        </button>
-      </div>
-
-      <div id="tasksList" class="list"></div>
-
-    </section>
-
-
-    <!-- ESTUDOS -->
-    <section id="page-studies" class="page">
-
-      <div class="page-title">
-        <div>
-          <span class="section-kicker">APRENDIZADO</span>
-          <h2>Estudos</h2>
-        </div>
-
-        <button
-          class="primary-button"
-          onclick="openStudyModal()"
-        >
-          + Novo
-        </button>
-      </div>
-
-      <div id="studiesList" class="list"></div>
-
-    </section>
-
-
-    <!-- FINANCEIRO -->
-    <section id="page-finance" class="page">
-
-      <div class="page-title">
-        <div>
-          <span class="section-kicker">DINHEIRO</span>
-          <h2>Financeiro</h2>
-        </div>
-
-        <button
-          class="primary-button"
-          onclick="openFinanceModal()"
-        >
-          + Novo
-        </button>
-      </div>
-
-
-      <div class="finance-summary">
-
-        <article>
-          <span>Entradas</span>
-          <strong
-            id="financeIncome"
-            class="positive"
-          >
-            R$ 0,00
-          </strong>
-        </article>
-
-        <article>
-          <span>Saídas</span>
-          <strong
-            id="financeExpense"
-            class="negative"
-          >
-            R$ 0,00
-          </strong>
-        </article>
-
-        <article>
-          <span>Saldo</span>
-          <strong id="financeBalance">
-            R$ 0,00
-          </strong>
-        </article>
-
-      </div>
-
-
-      <div id="financesList" class="list"></div>
-
-    </section>
-
-  </main>
-
-
-  <!-- NAV -->
-  <nav class="bottom-nav">
-
-    <button
-      class="nav-item active"
-      data-page="home"
-    >
-      <span>⌂</span>
-      <small>Início</small>
-    </button>
-
-    <button
-      class="nav-item"
-      data-page="tasks"
-    >
-      <span>✓</span>
-      <small>Tarefas</small>
-    </button>
-
-    <button
-      class="nav-item"
-      data-page="studies"
-    >
-      <span>◫</span>
-      <small>Estudos</small>
-    </button>
-
-    <button
-      class="nav-item"
-      data-page="finance"
-    >
-      <span>R$</span>
-      <small>Financeiro</small>
-    </button>
-
-  </nav>
-
-
-  <!-- TASK MODAL -->
-  <div id="taskModal" class="modal">
-
-    <div class="modal-card">
-
-      <div class="modal-header">
-        <h3>Nova tarefa</h3>
-
-        <button
-          onclick="closeModal('taskModal')"
-        >
-          ×
-        </button>
-      </div>
-
-
-      <input
-        id="taskTitle"
-        placeholder="Título"
-      />
-
-      <textarea
-        id="taskDescription"
-        placeholder="Descrição"
-      ></textarea>
-
-      <label>
-        Prazo
-        <input
-          id="taskDueDate"
-          type="date"
-        />
-      </label>
 
       <button
-        class="save-button"
-        onclick="createTask()"
+        class="primary-button"
+        onclick="openTaskModal()"
       >
-        Salvar tarefa
+        + Nova
       </button>
 
     </div>
 
-  </div>
+
+    <div
+      id="tasksList"
+      class="list"
+    ></div>
+
+  </section>
 
 
-  <!-- STUDY MODAL -->
-  <div id="studyModal" class="modal">
+  <!-- ================================================= -->
+  <!-- ESTUDOS -->
+  <!-- ================================================= -->
 
-    <div class="modal-card">
+  <section
+    id="page-studies"
+    class="page"
+  >
 
-      <div class="modal-header">
-        <h3>Novo estudo</h3>
+    <div class="page-title">
 
-        <button
-          onclick="closeModal('studyModal')"
-        >
-          ×
-        </button>
+      <div>
+
+        <span class="section-kicker">
+          APRENDIZADO
+        </span>
+
+        <h2>
+          Estudos
+        </h2>
+
       </div>
 
-
-      <input
-        id="studySubject"
-        placeholder="Matéria"
-      />
-
-      <input
-        id="studyTopic"
-        placeholder="Tópico"
-      />
-
-      <label>
-        Progresso (%)
-
-        <input
-          id="studyProgress"
-          type="number"
-          min="0"
-          max="100"
-          value="0"
-        />
-      </label>
-
-      <textarea
-        id="studyNotes"
-        placeholder="Anotações"
-      ></textarea>
-
       <button
-        class="save-button"
-        onclick="createStudy()"
+        class="primary-button"
+        onclick="openStudyModal()"
       >
-        Salvar estudo
+        + Novo
       </button>
 
     </div>
 
-  </div>
+
+    <div
+      id="studiesList"
+      class="list"
+    ></div>
+
+  </section>
 
 
-  <!-- FINANCE MODAL -->
-  <div id="financeModal" class="modal">
+  <!-- ================================================= -->
+  <!-- FINANCEIRO -->
+  <!-- ================================================= -->
 
-    <div class="modal-card">
+  <section
+    id="page-finance"
+    class="page"
+  >
 
-      <div class="modal-header">
-        <h3>Novo lançamento</h3>
+    <div class="page-title">
 
-        <button
-          onclick="closeModal('financeModal')"
-        >
-          ×
-        </button>
+      <div>
+
+        <span class="section-kicker">
+          DINHEIRO
+        </span>
+
+        <h2>
+          Financeiro
+        </h2>
+
       </div>
 
+      <button
+        class="primary-button"
+        onclick="openFinanceModal()"
+      >
+        + Novo
+      </button>
 
-      <select id="financeType">
-        <option value="income">
-          Entrada
-        </option>
+    </div>
 
-        <option value="expense">
-          Saída
-        </option>
-      </select>
+
+    <div class="finance-summary">
+
+      <article>
+
+        <span>
+          Entradas
+        </span>
+
+        <strong
+          id="financeIncome"
+          class="positive"
+        >
+          R$ 0,00
+        </strong>
+
+      </article>
+
+
+      <article>
+
+        <span>
+          Saídas
+        </span>
+
+        <strong
+          id="financeExpense"
+          class="negative"
+        >
+          R$ 0,00
+        </strong>
+
+      </article>
+
+
+      <article>
+
+        <span>
+          Saldo
+        </span>
+
+        <strong id="financeBalance">
+          R$ 0,00
+        </strong>
+
+      </article>
+
+    </div>
+
+
+    <div
+      id="financesList"
+      class="list"
+    ></div>
+
+  </section>
+
+</main>
+
+
+
+<!-- ===================================================== -->
+<!-- NAVEGAÇÃO -->
+<!-- ===================================================== -->
+
+<nav class="bottom-nav">
+
+  <button
+    class="nav-item active"
+    data-page="home"
+  >
+    <span>⌂</span>
+    <small>Início</small>
+  </button>
+
+
+  <button
+    class="nav-item"
+    data-page="tasks"
+  >
+    <span>✓</span>
+    <small>Tarefas</small>
+  </button>
+
+
+  <button
+    class="nav-item"
+    data-page="studies"
+  >
+    <span>◫</span>
+    <small>Estudos</small>
+  </button>
+
+
+  <button
+    class="nav-item"
+    data-page="finance"
+  >
+    <span>R$</span>
+    <small>Financeiro</small>
+  </button>
+
+</nav>
+
+
+
+<!-- ===================================================== -->
+<!-- MODAL TAREFA -->
+<!-- ===================================================== -->
+
+<div
+  id="taskModal"
+  class="modal"
+>
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <h3>
+        Nova tarefa
+      </h3>
+
+      <button
+        onclick="closeModal('taskModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <input
+      id="taskTitle"
+      placeholder="Título da tarefa"
+    >
+
+
+    <textarea
+      id="taskDescription"
+      placeholder="Descrição"
+    ></textarea>
+
+
+    <label>
+
+      Prazo
 
       <input
-        id="financeDescription"
-        placeholder="Descrição"
-      />
+        id="taskDueDate"
+        type="date"
+      >
+
+    </label>
+
+
+    <!-- LEMBRETE -->
+
+    <div class="reminder-box">
+
+      <label class="switch-row">
+
+        <div>
+
+          <strong>
+            🔔 Lembrete
+          </strong>
+
+          <small>
+            Repetir a cada 2 horas até concluir
+          </small>
+
+        </div>
+
+
+        <input
+          id="taskReminderEnabled"
+          type="checkbox"
+          onchange="toggleReminderFields()"
+        >
+
+      </label>
+
+
+      <div
+        id="reminderFields"
+        class="reminder-fields hidden"
+      >
+
+        <label>
+
+          Primeiro aviso
+
+          <input
+            id="taskReminderAt"
+            type="datetime-local"
+          >
+
+        </label>
+
+
+        <div class="reminder-info">
+
+          🔁 Depois do primeiro aviso,
+          você será lembrado novamente
+          a cada <strong>2 horas</strong>.
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="save-button"
+      onclick="createTask()"
+    >
+      Salvar tarefa
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- ===================================================== -->
+<!-- MODAL ESTUDO -->
+<!-- ===================================================== -->
+
+<div
+  id="studyModal"
+  class="modal"
+>
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <h3>
+        Novo estudo
+      </h3>
+
+      <button
+        onclick="closeModal('studyModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <input
+      id="studySubject"
+      placeholder="Matéria"
+    >
+
+
+    <input
+      id="studyTopic"
+      placeholder="Tópico"
+    >
+
+
+    <label>
+
+      Progresso (%)
 
       <input
-        id="financeAmount"
+        id="studyProgress"
         type="number"
-        step="0.01"
-        placeholder="Valor"
-      />
+        min="0"
+        max="100"
+        value="0"
+      >
 
-      <input
-        id="financeCategory"
-        placeholder="Categoria"
-      />
+    </label>
 
-      <label>
-        Data
 
-        <input
-          id="financeDate"
-          type="date"
-        />
-      </label>
+    <textarea
+      id="studyNotes"
+      placeholder="Anotações"
+    ></textarea>
+
+
+    <button
+      class="save-button"
+      onclick="createStudy()"
+    >
+      Salvar estudo
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- ===================================================== -->
+<!-- MODAL FINANÇAS -->
+<!-- ===================================================== -->
+
+<div
+  id="financeModal"
+  class="modal"
+>
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <h3>
+        Novo lançamento
+      </h3>
 
       <button
-        class="save-button"
-        onclick="createFinance()"
+        onclick="closeModal('financeModal')"
       >
-        Salvar lançamento
+        ×
       </button>
 
     </div>
 
+
+    <select id="financeType">
+
+      <option value="income">
+        Entrada
+      </option>
+
+      <option value="expense">
+        Saída
+      </option>
+
+    </select>
+
+
+    <input
+      id="financeDescription"
+      placeholder="Descrição"
+    >
+
+
+    <input
+      id="financeAmount"
+      type="number"
+      step="0.01"
+      placeholder="Valor"
+    >
+
+
+    <input
+      id="financeCategory"
+      placeholder="Categoria"
+    >
+
+
+    <label>
+
+      Data
+
+      <input
+        id="financeDate"
+        type="date"
+      >
+
+    </label>
+
+
+    <button
+      class="save-button"
+      onclick="createFinance()"
+    >
+      Salvar lançamento
+    </button>
+
   </div>
 
+</div>
 
-  <script src="app.js"></script>
+
+<script src="app.js"></script>
 
 </body>
 </html>
