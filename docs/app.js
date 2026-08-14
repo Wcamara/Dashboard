@@ -1,19 +1,25 @@
 const API_URL =
   "https://command-center-api.willpccamara.workers.dev";
 
+
 const tg =
   window.Telegram?.WebApp;
+
 
 let currentUser = null;
 
 let tasks = [];
+
 let studies = [];
+
 let finances = [];
 
 
-// =============================================
-// INIT
-// =============================================
+
+// =========================================================
+// START
+// =========================================================
+
 document.addEventListener(
   "DOMContentLoaded",
   startApp
@@ -28,52 +34,83 @@ async function startApp() {
 
   await authenticate();
 
+
   if (!currentUser) {
     return;
   }
+
 
   await loadEverything();
 }
 
 
-// =============================================
+
+// =========================================================
 // TELEGRAM
-// =============================================
+// =========================================================
+
 function initTelegram() {
 
   if (!tg) {
     return;
   }
 
+
   tg.ready();
+
   tg.expand();
 
+
   try {
-    tg.setHeaderColor("#080b10");
-    tg.setBackgroundColor("#080b10");
+
+    tg.setHeaderColor(
+      "#080b10"
+    );
+
+    tg.setBackgroundColor(
+      "#080b10"
+    );
+
   } catch {}
+
 
   const unsafeUser =
     tg.initDataUnsafe?.user;
 
+
   if (unsafeUser) {
-    updateUserHeader(unsafeUser);
+
+    updateUserHeader(
+      unsafeUser
+    );
   }
 }
 
 
-function updateUserHeader(user) {
+
+function updateUserHeader(
+  user
+) {
 
   const greeting =
-    document.getElementById("greeting");
+    document.getElementById(
+      "greeting"
+    );
+
 
   const avatar =
-    document.getElementById("avatar");
+    document.getElementById(
+      "avatar"
+    );
 
-  if (user?.first_name) {
+
+  if (
+    user?.first_name
+  ) {
 
     greeting.textContent =
       `Olá, ${user.first_name}`;
+
 
     avatar.textContent =
       user.first_name
@@ -83,9 +120,11 @@ function updateUserHeader(user) {
 }
 
 
-// =============================================
-// AUTH
-// =============================================
+
+// =========================================================
+// AUTENTICAÇÃO
+// =========================================================
+
 async function authenticate() {
 
   if (!tg?.initData) {
@@ -97,12 +136,15 @@ async function authenticate() {
     return;
   }
 
-  const response = await api(
-    "/auth/me",
-    {
-      method: "GET"
-    }
-  );
+
+  const response =
+    await api(
+      "/auth/me",
+      {
+        method: "GET"
+      }
+    );
+
 
   if (!response?.ok) {
 
@@ -114,8 +156,10 @@ async function authenticate() {
     return;
   }
 
+
   currentUser =
     response.user;
+
 
   updateUserHeader(
     currentUser
@@ -123,24 +167,36 @@ async function authenticate() {
 }
 
 
-// =============================================
+
+// =========================================================
 // API
-// =============================================
+// =========================================================
+
 async function api(
   path,
   options = {}
 ) {
 
   const headers = {
+
     ...(options.headers || {}),
+
     "X-Telegram-Init-Data":
       tg?.initData || ""
+
   };
 
-  if (options.body) {
-    headers["Content-Type"] =
+
+  if (
+    options.body
+  ) {
+
+    headers[
+      "Content-Type"
+    ] =
       "application/json";
   }
+
 
   try {
 
@@ -153,24 +209,38 @@ async function api(
         }
       );
 
-    return await response.json();
+
+    const data =
+      await response.json();
+
+
+    return data;
+
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     return {
+
       ok: false,
+
       error:
-        "Falha ao conectar com o servidor."
+        "Falha ao conectar ao servidor."
+
     };
   }
 }
 
 
-// =============================================
+
+// =========================================================
 // LOAD
-// =============================================
+// =========================================================
+
 async function loadEverything() {
 
   await Promise.all([
@@ -179,8 +249,10 @@ async function loadEverything() {
     loadFinances()
   ]);
 
+
   renderHome();
 }
+
 
 
 async function loadTasks() {
@@ -193,15 +265,24 @@ async function loadTasks() {
       }
     );
 
+
   if (!data.ok) {
+
+    console.error(
+      data.error
+    );
+
     return;
   }
+
 
   tasks =
     data.tasks || [];
 
+
   renderTasks();
 }
+
 
 
 async function loadStudies() {
@@ -214,15 +295,19 @@ async function loadStudies() {
       }
     );
 
+
   if (!data.ok) {
     return;
   }
 
+
   studies =
     data.studies || [];
 
+
   renderStudies();
 }
+
 
 
 async function loadFinances() {
@@ -235,12 +320,15 @@ async function loadFinances() {
       }
     );
 
+
   if (!data.ok) {
     return;
   }
 
+
   finances =
     data.finances || [];
+
 
   renderFinances(
     data.summary
@@ -248,53 +336,147 @@ async function loadFinances() {
 }
 
 
-// =============================================
-// NAVIGATION
-// =============================================
+
+// =========================================================
+// NAV
+// =========================================================
+
 function setupNavigation() {
 
   document
-    .querySelectorAll(".nav-item")
-    .forEach(button => {
+    .querySelectorAll(
+      ".nav-item"
+    )
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          const page =
-            button.dataset.page;
+            const page =
+              button.dataset.page;
 
-          document
-            .querySelectorAll(".nav-item")
-            .forEach(item =>
-              item.classList.remove("active")
-            );
 
-          button
-            .classList
-            .add("active");
+            document
+              .querySelectorAll(
+                ".nav-item"
+              )
+              .forEach(
+                item =>
+                  item
+                    .classList
+                    .remove(
+                      "active"
+                    )
+              );
 
-          document
-            .querySelectorAll(".page")
-            .forEach(item =>
-              item.classList.remove("active")
-            );
 
-          document
-            .getElementById(
-              `page-${page}`
-            )
-            .classList
-            .add("active");
-        }
-      );
-    });
+            button
+              .classList
+              .add(
+                "active"
+              );
+
+
+            document
+              .querySelectorAll(
+                ".page"
+              )
+              .forEach(
+                item =>
+                  item
+                    .classList
+                    .remove(
+                      "active"
+                    )
+              );
+
+
+            document
+              .getElementById(
+                `page-${page}`
+              )
+              .classList
+              .add(
+                "active"
+              );
+          }
+        );
+      }
+    );
 }
 
 
-// =============================================
+
+// =========================================================
+// REMINDER FORM
+// =========================================================
+
+function toggleReminderFields() {
+
+  const enabled =
+    document
+      .getElementById(
+        "taskReminderEnabled"
+      )
+      .checked;
+
+
+  const fields =
+    document
+      .getElementById(
+        "reminderFields"
+      );
+
+
+  if (enabled) {
+
+    fields
+      .classList
+      .remove(
+        "hidden"
+      );
+
+
+    const input =
+      document
+        .getElementById(
+          "taskReminderAt"
+        );
+
+
+    if (!input.value) {
+
+      const future =
+        new Date(
+          Date.now() +
+          5 * 60 * 1000
+        );
+
+
+      input.value =
+        dateToLocalInput(
+          future
+        );
+    }
+
+  } else {
+
+    fields
+      .classList
+      .add(
+        "hidden"
+      );
+  }
+}
+
+
+
+// =========================================================
 // TASKS
-// =============================================
+// =========================================================
+
 function renderTasks() {
 
   const container =
@@ -302,123 +484,268 @@ function renderTasks() {
       "tasksList"
     );
 
+
   if (!tasks.length) {
 
-    container.innerHTML =
-      `<div class="empty">
+    container.innerHTML = `
+      <div class="empty">
         Nenhuma tarefa cadastrada.
-      </div>`;
+      </div>
+    `;
 
     return;
   }
 
+
   container.innerHTML =
     tasks
-      .map(task => {
+      .map(
+        task => {
 
-        const completed =
-          task.status === "completed";
+          const completed =
+            task.status ===
+            "completed";
 
-        return `
-          <article
-            class="list-card
-            ${completed ? "completed" : ""}"
-          >
 
-            <div class="list-card-content">
+          const reminderEnabled =
+            Number(
+              task.reminder_enabled
+            ) === 1;
 
-              <h3>
-                ${escapeHtml(task.title)}
-              </h3>
 
-              ${
-                task.description
-                  ? `
-                    <p>
-                      ${escapeHtml(task.description)}
-                    </p>
-                  `
-                  : ""
-              }
+          return `
 
-              ${
-                task.due_date
-                  ? `
-                    <p>
-                      Prazo:
-                      ${formatDate(task.due_date)}
-                    </p>
-                  `
-                  : ""
-              }
-
-              <span
-                class="status
+            <article
+              class="
+                list-card
                 ${
                   completed
                     ? "completed"
-                    : "pending"
-                }"
-              >
-                ${
-                  completed
-                    ? "Concluída"
-                    : "Pendente"
+                    : ""
                 }
-              </span>
+              "
+            >
 
-            </div>
-
-
-            <div class="card-actions">
-
-              <button
-                class="icon-button"
-                onclick="
-                  toggleTask(
-                    ${task.id},
-                    '${task.status}'
-                  )
-                "
+              <div
+                class="list-card-content"
               >
-                ✓
-              </button>
 
-              <button
-                class="icon-button danger"
-                onclick="
-                  deleteTask(${task.id})
-                "
+                <h3>
+                  ${
+                    escapeHtml(
+                      task.title
+                    )
+                  }
+                </h3>
+
+
+                ${
+                  task.description
+                    ? `
+                      <p>
+                        ${
+                          escapeHtml(
+                            task.description
+                          )
+                        }
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  task.due_date
+                    ? `
+                      <p>
+                        Prazo:
+                        ${
+                          formatDate(
+                            task.due_date
+                          )
+                        }
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                <span
+                  class="
+                    status
+                    ${
+                      completed
+                        ? "completed"
+                        : "pending"
+                    }
+                  "
+                >
+                  ${
+                    completed
+                      ? "Concluída"
+                      : "Pendente"
+                  }
+                </span>
+
+
+                ${
+                  reminderEnabled &&
+                  !completed
+
+                    ? `
+
+                      <div
+                        class="reminder-badge"
+                      >
+                        🔔 A cada 2 horas
+                      </div>
+
+
+                      ${
+                        task.next_reminder_at
+
+                          ? `
+                            <div
+                              class="next-reminder"
+                            >
+                              Próximo:
+                              ${
+                                formatDateTime(
+                                  task.next_reminder_at
+                                )
+                              }
+                            </div>
+                          `
+
+                          : ""
+                      }
+
+                    `
+
+                    : ""
+                }
+
+              </div>
+
+
+              <div
+                class="card-actions"
               >
-                ×
-              </button>
 
-            </div>
+                <button
+                  class="icon-button"
+                  title="
+                    ${
+                      completed
+                        ? "Reabrir"
+                        : "Concluir"
+                    }
+                  "
+                  onclick="
+                    toggleTask(
+                      ${task.id},
+                      '${task.status}'
+                    )
+                  "
+                >
+                  ${
+                    completed
+                      ? "↶"
+                      : "✓"
+                  }
+                </button>
 
-          </article>
-        `;
-      })
+
+                ${
+                  reminderEnabled &&
+                  !completed
+
+                    ? `
+                      <button
+                        class="
+                          reminder-disable-button
+                        "
+                        onclick="
+                          disableReminder(
+                            ${task.id}
+                          )
+                        "
+                      >
+                        🔕 Parar
+                      </button>
+                    `
+
+                    : ""
+                }
+
+
+                <button
+                  class="
+                    icon-button
+                    danger
+                  "
+                  onclick="
+                    deleteTask(
+                      ${task.id}
+                    )
+                  "
+                >
+                  ×
+                </button>
+
+              </div>
+
+            </article>
+
+          `;
+        }
+      )
       .join("");
 }
+
 
 
 async function createTask() {
 
   const title =
     document
-      .getElementById("taskTitle")
+      .getElementById(
+        "taskTitle"
+      )
       .value
       .trim();
+
 
   const description =
     document
-      .getElementById("taskDescription")
+      .getElementById(
+        "taskDescription"
+      )
       .value
       .trim();
 
+
   const dueDate =
     document
-      .getElementById("taskDueDate")
+      .getElementById(
+        "taskDueDate"
+      )
+      .value;
+
+
+  const reminderEnabled =
+    document
+      .getElementById(
+        "taskReminderEnabled"
+      )
+      .checked;
+
+
+  const reminderInput =
+    document
+      .getElementById(
+        "taskReminderAt"
+      )
       .value;
 
 
@@ -432,26 +759,97 @@ async function createTask() {
   }
 
 
+  let reminderAt =
+    null;
+
+
+  if (
+    reminderEnabled
+  ) {
+
+    if (!reminderInput) {
+
+      alert(
+        "Escolha a data e hora do primeiro lembrete."
+      );
+
+      return;
+    }
+
+
+    const reminderDate =
+      new Date(
+        reminderInput
+      );
+
+
+    if (
+      Number.isNaN(
+        reminderDate.getTime()
+      )
+    ) {
+
+      alert(
+        "Horário de lembrete inválido."
+      );
+
+      return;
+    }
+
+
+    if (
+      reminderDate.getTime()
+      <= Date.now()
+    ) {
+
+      alert(
+        "Escolha um horário futuro para o lembrete."
+      );
+
+      return;
+    }
+
+
+    reminderAt =
+      reminderDate
+        .toISOString();
+  }
+
+
   const result =
     await api(
       "/tasks",
       {
+
         method: "POST",
 
         body:
           JSON.stringify({
+
             title,
+
             description,
+
             due_date:
-              dueDate || null
+              dueDate || null,
+
+            reminder_enabled:
+              reminderEnabled,
+
+            reminder_at:
+              reminderAt
+
           })
+
       }
     );
 
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -461,12 +859,16 @@ async function createTask() {
     "taskModal"
   );
 
+
   clearTaskForm();
+
 
   await loadTasks();
 
+
   renderHome();
 }
+
 
 
 async function toggleTask(
@@ -484,6 +886,7 @@ async function toggleTask(
     await api(
       `/tasks/${id}`,
       {
+
         method: "PUT",
 
         body:
@@ -491,13 +894,16 @@ async function toggleTask(
             status:
               newStatus
           })
+
       }
     );
 
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -509,7 +915,57 @@ async function toggleTask(
 }
 
 
-async function deleteTask(id) {
+
+async function disableReminder(
+  id
+) {
+
+  const confirmDisable =
+    confirm(
+      "Desativar permanentemente o lembrete desta tarefa?"
+    );
+
+
+  if (!confirmDisable) {
+    return;
+  }
+
+
+  const result =
+    await api(
+      `/tasks/${id}/reminder/disable`,
+      {
+        method: "POST"
+      }
+    );
+
+
+  if (!result.ok) {
+
+    alert(
+      result.error
+    );
+
+    return;
+  }
+
+
+  await loadTasks();
+
+
+  renderHome();
+
+
+  telegramHaptic(
+    "success"
+  );
+}
+
+
+
+async function deleteTask(
+  id
+) {
 
   if (
     !confirm(
@@ -531,7 +987,9 @@ async function deleteTask(id) {
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -543,9 +1001,11 @@ async function deleteTask(id) {
 }
 
 
-// =============================================
+
+// =========================================================
 // STUDIES
-// =============================================
+// =========================================================
+
 function renderStudies() {
 
   const container =
@@ -556,10 +1016,11 @@ function renderStudies() {
 
   if (!studies.length) {
 
-    container.innerHTML =
-      `<div class="empty">
+    container.innerHTML = `
+      <div class="empty">
         Nenhum estudo cadastrado.
-      </div>`;
+      </div>
+    `;
 
     return;
   }
@@ -567,62 +1028,84 @@ function renderStudies() {
 
   container.innerHTML =
     studies
-      .map(study => {
+      .map(
+        study => `
 
-        return `
-          <article class="list-card">
+          <article
+            class="list-card"
+          >
 
-            <div class="list-card-content">
+            <div
+              class="list-card-content"
+            >
 
               <h3>
-                ${escapeHtml(study.subject)}
+                ${
+                  escapeHtml(
+                    study.subject
+                  )
+                }
               </h3>
+
 
               ${
                 study.topic
+
                   ? `
                     <p>
-                      ${escapeHtml(study.topic)}
+                      ${
+                        escapeHtml(
+                          study.topic
+                        )
+                      }
                     </p>
                   `
+
                   : ""
               }
+
 
               <p>
                 Progresso:
                 ${study.progress}%
               </p>
 
+
               <div class="progress">
+
                 <div
                   style="
                     width:
                     ${study.progress}%;
                   "
                 ></div>
+
               </div>
 
             </div>
 
 
-            <div class="card-actions">
-
-              <button
-                class="icon-button danger"
-                onclick="
-                  deleteStudy(${study.id})
-                "
-              >
-                ×
-              </button>
-
-            </div>
+            <button
+              class="
+                icon-button
+                danger
+              "
+              onclick="
+                deleteStudy(
+                  ${study.id}
+                )
+              "
+            >
+              ×
+            </button>
 
           </article>
-        `;
-      })
+
+        `
+      )
       .join("");
 }
+
 
 
 async function createStudy() {
@@ -635,6 +1118,7 @@ async function createStudy() {
       .value
       .trim();
 
+
   const topic =
     document
       .getElementById(
@@ -642,6 +1126,7 @@ async function createStudy() {
       )
       .value
       .trim();
+
 
   const progress =
     Number(
@@ -651,6 +1136,7 @@ async function createStudy() {
         )
         .value
     );
+
 
   const notes =
     document
@@ -675,6 +1161,7 @@ async function createStudy() {
     await api(
       "/studies",
       {
+
         method: "POST",
 
         body:
@@ -684,13 +1171,16 @@ async function createStudy() {
             progress,
             notes
           })
+
       }
     );
 
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -700,15 +1190,21 @@ async function createStudy() {
     "studyModal"
   );
 
+
   clearStudyForm();
 
+
   await loadStudies();
+
 
   renderHome();
 }
 
 
-async function deleteStudy(id) {
+
+async function deleteStudy(
+  id
+) {
 
   if (
     !confirm(
@@ -730,7 +1226,9 @@ async function deleteStudy(id) {
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -738,13 +1236,16 @@ async function deleteStudy(id) {
 
   await loadStudies();
 
+
   renderHome();
 }
 
 
-// =============================================
+
+// =========================================================
 // FINANCES
-// =============================================
+// =========================================================
+
 function renderFinances(
   summary
 ) {
@@ -754,10 +1255,12 @@ function renderFinances(
       summary?.income || 0
     );
 
+
   const expense =
     Number(
       summary?.expense || 0
     );
+
 
   const balance =
     Number(
@@ -797,10 +1300,11 @@ function renderFinances(
 
   if (!finances.length) {
 
-    container.innerHTML =
-      `<div class="empty">
+    container.innerHTML = `
+      <div class="empty">
         Nenhum lançamento.
-      </div>`;
+      </div>
+    `;
 
     return;
   }
@@ -808,64 +1312,104 @@ function renderFinances(
 
   container.innerHTML =
     finances
-      .map(item => {
+      .map(
+        item => {
 
-        const incomeItem =
-          item.type === "income";
+          const incomeItem =
+            item.type ===
+            "income";
 
-        return `
-          <article class="list-card">
 
-            <div class="list-card-content">
+          return `
 
-              <h3>
-                ${escapeHtml(item.description)}
-              </h3>
+            <article
+              class="list-card"
+            >
 
-              <p>
-                ${
-                  escapeHtml(
-                    item.category || "Sem categoria"
-                  )
-                }
-                ·
-                ${formatDate(item.date)}
-              </p>
-
-              <strong
+              <div
                 class="
-                  ${
-                    incomeItem
-                      ? "positive"
-                      : "negative"
-                  }
+                  list-card-content
                 "
               >
-                ${
-                  incomeItem
-                    ? "+"
-                    : "-"
-                }
-                ${money(item.amount)}
-              </strong>
 
-            </div>
+                <h3>
+                  ${
+                    escapeHtml(
+                      item.description
+                    )
+                  }
+                </h3>
 
 
-            <button
-              class="icon-button danger"
-              onclick="
-                deleteFinance(${item.id})
-              "
-            >
-              ×
-            </button>
+                <p>
 
-          </article>
-        `;
-      })
+                  ${
+                    escapeHtml(
+                      item.category ||
+                      "Sem categoria"
+                    )
+                  }
+
+                  ·
+
+                  ${
+                    formatDate(
+                      item.date
+                    )
+                  }
+
+                </p>
+
+
+                <strong
+                  class="
+                    ${
+                      incomeItem
+                        ? "positive"
+                        : "negative"
+                    }
+                  "
+                >
+
+                  ${
+                    incomeItem
+                      ? "+"
+                      : "-"
+                  }
+
+                  ${
+                    money(
+                      item.amount
+                    )
+                  }
+
+                </strong>
+
+              </div>
+
+
+              <button
+                class="
+                  icon-button
+                  danger
+                "
+                onclick="
+                  deleteFinance(
+                    ${item.id}
+                  )
+                "
+              >
+                ×
+              </button>
+
+            </article>
+
+          `;
+        }
+      )
       .join("");
 }
+
 
 
 async function createFinance() {
@@ -877,6 +1421,7 @@ async function createFinance() {
       )
       .value;
 
+
   const description =
     document
       .getElementById(
@@ -884,6 +1429,7 @@ async function createFinance() {
       )
       .value
       .trim();
+
 
   const amount =
     Number(
@@ -894,6 +1440,7 @@ async function createFinance() {
         .value
     );
 
+
   const category =
     document
       .getElementById(
@@ -901,6 +1448,7 @@ async function createFinance() {
       )
       .value
       .trim();
+
 
   const date =
     document
@@ -920,7 +1468,10 @@ async function createFinance() {
   }
 
 
-  if (!amount || amount <= 0) {
+  if (
+    !amount ||
+    amount <= 0
+  ) {
 
     alert(
       "Digite um valor válido."
@@ -944,6 +1495,7 @@ async function createFinance() {
     await api(
       "/finances",
       {
+
         method: "POST",
 
         body:
@@ -954,13 +1506,16 @@ async function createFinance() {
             category,
             date
           })
+
       }
     );
 
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -970,15 +1525,21 @@ async function createFinance() {
     "financeModal"
   );
 
+
   clearFinanceForm();
 
+
   await loadFinances();
+
 
   renderHome();
 }
 
 
-async function deleteFinance(id) {
+
+async function deleteFinance(
+  id
+) {
 
   if (
     !confirm(
@@ -1000,7 +1561,9 @@ async function deleteFinance(id) {
 
   if (!result.ok) {
 
-    alert(result.error);
+    alert(
+      result.error
+    );
 
     return;
   }
@@ -1008,19 +1571,23 @@ async function deleteFinance(id) {
 
   await loadFinances();
 
+
   renderHome();
 }
 
 
-// =============================================
+
+// =========================================================
 // HOME
-// =============================================
+// =========================================================
+
 function renderHome() {
 
   const pending =
     tasks.filter(
       task =>
-        task.status === "pending"
+        task.status ===
+        "pending"
     );
 
 
@@ -1036,12 +1603,18 @@ function renderHome() {
     finances
       .filter(
         item =>
-          item.type === "income"
+          item.type ===
+          "income"
       )
       .reduce(
-        (sum, item) =>
+        (
+          sum,
+          item
+        ) =>
           sum +
-          Number(item.amount),
+          Number(
+            item.amount
+          ),
         0
       );
 
@@ -1050,12 +1623,18 @@ function renderHome() {
     finances
       .filter(
         item =>
-          item.type === "expense"
+          item.type ===
+          "expense"
       )
       .reduce(
-        (sum, item) =>
+        (
+          sum,
+          item
+        ) =>
           sum +
-          Number(item.amount),
+          Number(
+            item.amount
+          ),
         0
       );
 
@@ -1066,7 +1645,8 @@ function renderHome() {
     )
     .textContent =
       money(
-        income - expenses
+        income -
+        expenses
       );
 
 
@@ -1078,39 +1658,61 @@ function renderHome() {
 
   if (!pending.length) {
 
-    homeTasks.innerHTML =
-      `<div class="empty">
+    homeTasks.innerHTML = `
+      <div class="empty">
         Nenhuma tarefa pendente.
-      </div>`;
+      </div>
+    `;
 
   } else {
 
     homeTasks.innerHTML =
       pending
         .slice(0, 3)
-        .map(task => `
-          <article class="list-card">
+        .map(
+          task => `
 
-            <div class="list-card-content">
+            <article
+              class="list-card"
+            >
 
-              <h3>
-                ${escapeHtml(task.title)}
-              </h3>
+              <div
+                class="
+                  list-card-content
+                "
+              >
 
-              ${
-                task.due_date
-                  ? `
-                    <p>
-                      ${formatDate(task.due_date)}
-                    </p>
-                  `
-                  : ""
-              }
+                <h3>
+                  ${
+                    escapeHtml(
+                      task.title
+                    )
+                  }
+                </h3>
 
-            </div>
 
-          </article>
-        `)
+                ${
+                  Number(
+                    task.reminder_enabled
+                  ) === 1
+
+                    ? `
+                      <div
+                        class="reminder-badge"
+                      >
+                        🔔 A cada 2 horas
+                      </div>
+                    `
+
+                    : ""
+                }
+
+              </div>
+
+            </article>
+
+          `
+        )
         .join("");
   }
 
@@ -1123,54 +1725,77 @@ function renderHome() {
 
   if (!studies.length) {
 
-    homeStudies.innerHTML =
-      `<div class="empty">
+    homeStudies.innerHTML = `
+      <div class="empty">
         Nenhum estudo cadastrado.
-      </div>`;
+      </div>
+    `;
 
   } else {
 
     homeStudies.innerHTML =
       studies
         .slice(0, 3)
-        .map(study => `
-          <article class="list-card">
+        .map(
+          study => `
 
-            <div class="list-card-content">
+            <article
+              class="list-card"
+            >
 
-              <h3>
-                ${escapeHtml(study.subject)}
-              </h3>
+              <div
+                class="
+                  list-card-content
+                "
+              >
 
-              <p>
-                ${
-                  escapeHtml(
-                    study.topic || ""
-                  )
-                }
-              </p>
+                <h3>
+                  ${
+                    escapeHtml(
+                      study.subject
+                    )
+                  }
+                </h3>
 
-              <div class="progress">
+
+                <p>
+                  ${
+                    escapeHtml(
+                      study.topic || ""
+                    )
+                  }
+                </p>
+
+
                 <div
-                  style="
-                    width:
-                    ${study.progress}%;
-                  "
-                ></div>
+                  class="progress"
+                >
+
+                  <div
+                    style="
+                      width:
+                      ${study.progress}%;
+                    "
+                  ></div>
+
+                </div>
+
               </div>
 
-            </div>
+            </article>
 
-          </article>
-        `)
+          `
+        )
         .join("");
   }
 }
 
 
-// =============================================
+
+// =========================================================
 // MODALS
-// =============================================
+// =========================================================
+
 function openTaskModal() {
 
   document
@@ -1178,8 +1803,11 @@ function openTaskModal() {
       "taskModal"
     )
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 }
+
 
 
 function openStudyModal() {
@@ -1189,8 +1817,11 @@ function openStudyModal() {
       "studyModal"
     )
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 }
+
 
 
 function openFinanceModal() {
@@ -1200,12 +1831,13 @@ function openFinanceModal() {
       "financeDate"
     );
 
+
   if (!input.value) {
 
     input.value =
-      new Date()
-        .toISOString()
-        .slice(0, 10);
+      localDateString(
+        new Date()
+      );
   }
 
 
@@ -1214,22 +1846,33 @@ function openFinanceModal() {
       "financeModal"
     )
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 }
 
 
-function closeModal(id) {
+
+function closeModal(
+  id
+) {
 
   document
-    .getElementById(id)
+    .getElementById(
+      id
+    )
     .classList
-    .remove("open");
+    .remove(
+      "open"
+    );
 }
 
 
-// =============================================
+
+// =========================================================
 // CLEAR FORMS
-// =============================================
+// =========================================================
+
 function clearTaskForm() {
 
   document
@@ -1238,18 +1881,45 @@ function clearTaskForm() {
     )
     .value = "";
 
+
   document
     .getElementById(
       "taskDescription"
     )
     .value = "";
 
+
   document
     .getElementById(
       "taskDueDate"
     )
     .value = "";
+
+
+  document
+    .getElementById(
+      "taskReminderEnabled"
+    )
+    .checked = false;
+
+
+  document
+    .getElementById(
+      "taskReminderAt"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "reminderFields"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
 }
+
 
 
 function clearStudyForm() {
@@ -1260,11 +1930,13 @@ function clearStudyForm() {
     )
     .value = "";
 
+
   document
     .getElementById(
       "studyTopic"
     )
     .value = "";
+
 
   document
     .getElementById(
@@ -1272,12 +1944,14 @@ function clearStudyForm() {
     )
     .value = 0;
 
+
   document
     .getElementById(
       "studyNotes"
     )
     .value = "";
 }
+
 
 
 function clearFinanceForm() {
@@ -1288,11 +1962,13 @@ function clearFinanceForm() {
     )
     .value = "";
 
+
   document
     .getElementById(
       "financeAmount"
     )
     .value = "";
+
 
   document
     .getElementById(
@@ -1302,10 +1978,46 @@ function clearFinanceForm() {
 }
 
 
-// =============================================
+
+// =========================================================
+// TELEGRAM FEEDBACK
+// =========================================================
+
+function telegramHaptic(
+  type
+) {
+
+  try {
+
+    if (
+      type === "success"
+    ) {
+
+      tg?.HapticFeedback
+        ?.notificationOccurred(
+          "success"
+        );
+
+    } else {
+
+      tg?.HapticFeedback
+        ?.impactOccurred(
+          "medium"
+        );
+    }
+
+  } catch {}
+}
+
+
+
+// =========================================================
 // HELPERS
-// =============================================
-function money(value) {
+// =========================================================
+
+function money(
+  value
+) {
 
   return new Intl
     .NumberFormat(
@@ -1316,16 +2028,22 @@ function money(value) {
       }
     )
     .format(
-      Number(value || 0)
+      Number(
+        value || 0
+      )
     );
 }
 
 
-function formatDate(value) {
+
+function formatDate(
+  value
+) {
 
   if (!value) {
     return "";
   }
+
 
   const [
     year,
@@ -1334,19 +2052,166 @@ function formatDate(value) {
   ] =
     value.split("-");
 
-  return `${day}/${month}/${year}`;
+
+  return (
+    `${day}/${month}/${year}`
+  );
 }
 
 
-function escapeHtml(value) {
 
-  const div =
-    document.createElement(
-      "div"
+function formatDateTime(
+  value
+) {
+
+  if (!value) {
+    return "";
+  }
+
+
+  const date =
+    new Date(value);
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return "";
+  }
+
+
+  return new Intl
+    .DateTimeFormat(
+      "pt-BR",
+      {
+
+        day: "2-digit",
+
+        month: "2-digit",
+
+        hour: "2-digit",
+
+        minute: "2-digit"
+
+      }
+    )
+    .format(
+      date
+    );
+}
+
+
+
+function dateToLocalInput(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    )
+    .padStart(
+      2,
+      "0"
     );
 
+
+  const day =
+    String(
+      date.getDate()
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  const hour =
+    String(
+      date.getHours()
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  const minute =
+    String(
+      date.getMinutes()
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    `${year}-${month}-${day}` +
+    `T${hour}:${minute}`
+  );
+}
+
+
+
+function localDateString(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  const day =
+    String(
+      date.getDate()
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    `${year}-${month}-${day}`
+  );
+}
+
+
+
+function escapeHtml(
+  value
+) {
+
+  const div =
+    document
+      .createElement(
+        "div"
+      );
+
+
   div.textContent =
-    String(value ?? "");
+    String(
+      value ?? ""
+    );
+
 
   return div.innerHTML;
 }
