@@ -1,637 +1,1201 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#080b10"
   >
 
   <title>Command Center</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script
+    src="https://telegram.org/js/telegram-web-app.js"
+  ></script>
 </head>
+
 
 <body>
 
-<main class="app">
+  <div id="app">
 
-  <!-- HEADER -->
-  <header class="header">
+    <!-- ==================================================
+         HEADER
+    =================================================== -->
 
-    <div>
-      <span class="eyebrow">
-        COMMAND CENTER
-      </span>
+    <header class="topbar">
 
-      <h1 id="greeting">
-        Olá
-      </h1>
-    </div>
+      <div>
+
+        <p class="eyebrow">
+          COMMAND CENTER
+        </p>
+
+        <h1 id="page-title">
+          Início
+        </h1>
+
+      </div>
+
+
+      <button
+        id="refresh-button"
+        class="icon-button"
+        aria-label="Atualizar"
+      >
+        ↻
+      </button>
+
+    </header>
+
+
+    <!-- ==================================================
+         LOADING
+    =================================================== -->
 
     <div
-      id="avatar"
-      class="avatar"
+      id="loading"
+      class="loading"
     >
-      U
-    </div>
-
-  </header>
-
-
-  <!-- ================================================= -->
-  <!-- HOME -->
-  <!-- ================================================= -->
-
-  <section
-    id="page-home"
-    class="page active"
-  >
-
-    <div class="metrics">
-
-      <article class="metric-card">
-
-        <span>
-          Saldo
-        </span>
-
-        <strong id="homeBalance">
-          R$ 0,00
-        </strong>
-
-      </article>
-
-
-      <article class="metric-card">
-
-        <span>
-          Tarefas pendentes
-        </span>
-
-        <strong id="homePendingTasks">
-          0
-        </strong>
-
-      </article>
-
+      Carregando...
     </div>
 
 
-    <section class="section">
+    <!-- ==================================================
+         ERROR
+    =================================================== -->
 
-      <div class="section-header">
+    <div
+      id="error-box"
+      class="error-box hidden"
+    ></div>
 
-        <div>
 
-          <span class="section-kicker">
-            TAREFAS
-          </span>
+    <!-- ==================================================
+         CONTENT
+    =================================================== -->
 
-          <h2>
-            Próximas tarefas
+    <main id="content">
+
+      <!-- ================================================
+           HOME
+      ================================================= -->
+
+      <section
+        id="page-home"
+        class="page active"
+      >
+
+        <div class="welcome">
+
+          <p class="muted">
+            Olá,
+          </p>
+
+          <h2 id="user-name">
+            ...
           </h2>
 
         </div>
 
-      </div>
 
-      <div
-        id="homeTasks"
-        class="list"
-      ></div>
+        <div class="section-title-row">
 
-    </section>
+          <div>
 
+            <p class="section-label">
+              FINANCEIRO
+            </p>
 
-    <section class="section">
+            <h3>
+              Visão geral
+            </h3>
 
-      <div class="section-header">
-
-        <div>
-
-          <span class="section-kicker">
-            ESTUDOS
-          </span>
-
-          <h2>
-            Últimos estudos
-          </h2>
+          </div>
 
         </div>
 
-      </div>
 
-      <div
-        id="homeStudies"
-        class="list"
-      ></div>
+        <div class="balance-card">
 
-    </section>
+          <div>
 
-  </section>
+            <p id="home-current-month">
+              Mês atual
+            </p>
 
+            <span>
+              Saldo
+            </span>
 
-  <!-- ================================================= -->
-  <!-- TAREFAS -->
-  <!-- ================================================= -->
+          </div>
 
-  <section
-    id="page-tasks"
-    class="page"
-  >
 
-    <div class="page-title">
-
-      <div>
-
-        <span class="section-kicker">
-          ORGANIZAÇÃO
-        </span>
-
-        <h2>
-          Tarefas
-        </h2>
-
-      </div>
-
-      <button
-        class="primary-button"
-        onclick="openTaskModal()"
-      >
-        + Nova
-      </button>
-
-    </div>
-
-
-    <div
-      id="tasksList"
-      class="list"
-    ></div>
-
-  </section>
-
-
-  <!-- ================================================= -->
-  <!-- ESTUDOS -->
-  <!-- ================================================= -->
-
-  <section
-    id="page-studies"
-    class="page"
-  >
-
-    <div class="page-title">
-
-      <div>
-
-        <span class="section-kicker">
-          APRENDIZADO
-        </span>
-
-        <h2>
-          Estudos
-        </h2>
-
-      </div>
-
-      <button
-        class="primary-button"
-        onclick="openStudyModal()"
-      >
-        + Novo
-      </button>
-
-    </div>
-
-
-    <div
-      id="studiesList"
-      class="list"
-    ></div>
-
-  </section>
-
-
-  <!-- ================================================= -->
-  <!-- FINANCEIRO -->
-  <!-- ================================================= -->
-
-  <section
-    id="page-finance"
-    class="page"
-  >
-
-    <div class="page-title">
-
-      <div>
-
-        <span class="section-kicker">
-          DINHEIRO
-        </span>
-
-        <h2>
-          Financeiro
-        </h2>
-
-      </div>
-
-      <button
-        class="primary-button"
-        onclick="openFinanceModal()"
-      >
-        + Novo
-      </button>
-
-    </div>
-
-
-    <div class="finance-summary">
-
-      <article>
-
-        <span>
-          Entradas
-        </span>
-
-        <strong
-          id="financeIncome"
-          class="positive"
-        >
-          R$ 0,00
-        </strong>
-
-      </article>
-
-
-      <article>
-
-        <span>
-          Saídas
-        </span>
-
-        <strong
-          id="financeExpense"
-          class="negative"
-        >
-          R$ 0,00
-        </strong>
-
-      </article>
-
-
-      <article>
-
-        <span>
-          Saldo
-        </span>
-
-        <strong id="financeBalance">
-          R$ 0,00
-        </strong>
-
-      </article>
-
-    </div>
-
-
-    <div
-      id="financesList"
-      class="list"
-    ></div>
-
-  </section>
-
-</main>
-
-
-
-<!-- ===================================================== -->
-<!-- NAVEGAÇÃO -->
-<!-- ===================================================== -->
-
-<nav class="bottom-nav">
-
-  <button
-    class="nav-item active"
-    data-page="home"
-  >
-    <span>⌂</span>
-    <small>Início</small>
-  </button>
-
-
-  <button
-    class="nav-item"
-    data-page="tasks"
-  >
-    <span>✓</span>
-    <small>Tarefas</small>
-  </button>
-
-
-  <button
-    class="nav-item"
-    data-page="studies"
-  >
-    <span>◫</span>
-    <small>Estudos</small>
-  </button>
-
-
-  <button
-    class="nav-item"
-    data-page="finance"
-  >
-    <span>R$</span>
-    <small>Financeiro</small>
-  </button>
-
-</nav>
-
-
-
-<!-- ===================================================== -->
-<!-- MODAL TAREFA -->
-<!-- ===================================================== -->
-
-<div
-  id="taskModal"
-  class="modal"
->
-
-  <div class="modal-card">
-
-    <div class="modal-header">
-
-      <h3>
-        Nova tarefa
-      </h3>
-
-      <button
-        onclick="closeModal('taskModal')"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <input
-      id="taskTitle"
-      placeholder="Título da tarefa"
-    >
-
-
-    <textarea
-      id="taskDescription"
-      placeholder="Descrição"
-    ></textarea>
-
-
-    <label>
-
-      Prazo
-
-      <input
-        id="taskDueDate"
-        type="date"
-      >
-
-    </label>
-
-
-    <!-- LEMBRETE -->
-
-    <div class="reminder-box">
-
-      <label class="switch-row">
-
-        <div>
-
-          <strong>
-            🔔 Lembrete
+          <strong id="home-balance">
+            R$ 0,00
           </strong>
 
-          <small>
-            Repetir a cada 2 horas até concluir
-          </small>
+
+          <div class="balance-grid">
+
+            <div>
+
+              <span>
+                Entradas
+              </span>
+
+              <strong
+                id="home-income"
+                class="positive"
+              >
+                R$ 0,00
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Saídas
+              </span>
+
+              <strong
+                id="home-expense"
+                class="negative"
+              >
+                R$ 0,00
+              </strong>
+
+            </div>
+
+          </div>
 
         </div>
 
 
-        <input
-          id="taskReminderEnabled"
-          type="checkbox"
-          onchange="toggleReminderFields()"
-        >
+        <div class="card next-month-card">
 
-      </label>
+          <div class="card-header">
+
+            <div>
+
+              <span class="card-kicker">
+                PRÓXIMO MÊS
+              </span>
+
+              <h3 id="home-next-month">
+                ...
+              </h3>
+
+            </div>
 
 
-      <div
-        id="reminderFields"
-        class="reminder-fields hidden"
+            <span class="icon-box">
+              📅
+            </span>
+
+          </div>
+
+
+          <div class="next-month-stats">
+
+            <div>
+
+              <span>
+                Já comprometido
+              </span>
+
+              <strong
+                id="home-next-expense"
+                class="negative"
+              >
+                R$ 0,00
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Saldo previsto
+              </span>
+
+              <strong id="home-next-balance">
+                R$ 0,00
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="secondary-button full"
+            data-go-page="finance"
+            data-month-mode="next"
+          >
+            Ver próximo mês
+          </button>
+
+        </div>
+
+
+        <div class="dashboard-grid">
+
+          <div class="card">
+
+            <div class="stat-line">
+
+              <div>
+
+                <span class="card-kicker">
+                  TAREFAS
+                </span>
+
+                <strong id="home-pending-tasks">
+                  0
+                </strong>
+
+                <p>
+                  pendentes
+                </p>
+
+              </div>
+
+
+              <span class="icon-box">
+                ✓
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="card">
+
+            <div class="stat-line">
+
+              <div>
+
+                <span class="card-kicker">
+                  CARTÃO
+                </span>
+
+                <strong id="home-card-closing">
+                  --
+                </strong>
+
+                <p>
+                  fechamento
+                </p>
+
+              </div>
+
+
+              <span class="icon-box">
+                💳
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="section-title-row">
+
+          <div>
+
+            <p class="section-label">
+              ATIVIDADE
+            </p>
+
+            <h3>
+              Tarefas recentes
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="home-task-list"
+          class="list"
+        ></div>
+
+      </section>
+
+
+      <!-- ================================================
+           TASKS
+      ================================================= -->
+
+      <section
+        id="page-tasks"
+        class="page"
       >
+
+        <div class="page-actions">
+
+          <div>
+
+            <p class="section-label">
+              ORGANIZAÇÃO
+            </p>
+
+            <h2>
+              Tarefas
+            </h2>
+
+          </div>
+
+
+          <button
+            id="new-task-button"
+            class="primary-button"
+          >
+            + Nova
+          </button>
+
+        </div>
+
+
+        <div class="filter-tabs">
+
+          <button
+            class="filter-tab active"
+            data-task-filter="pending"
+          >
+            Pendentes
+          </button>
+
+          <button
+            class="filter-tab"
+            data-task-filter="completed"
+          >
+            Concluídas
+          </button>
+
+          <button
+            class="filter-tab"
+            data-task-filter="all"
+          >
+            Todas
+          </button>
+
+        </div>
+
+
+        <div
+          id="task-list"
+          class="list"
+        ></div>
+
+      </section>
+
+
+      <!-- ================================================
+           STUDIES
+      ================================================= -->
+
+      <section
+        id="page-studies"
+        class="page"
+      >
+
+        <div class="page-actions">
+
+          <div>
+
+            <p class="section-label">
+              PROGRESSO
+            </p>
+
+            <h2>
+              Estudos
+            </h2>
+
+          </div>
+
+
+          <button
+            id="new-study-button"
+            class="primary-button"
+          >
+            + Novo
+          </button>
+
+        </div>
+
+
+        <div
+          id="study-list"
+          class="list"
+        ></div>
+
+      </section>
+
+
+      <!-- ================================================
+           FINANCE
+      ================================================= -->
+
+      <section
+        id="page-finance"
+        class="page"
+      >
+
+        <div class="page-actions">
+
+          <div>
+
+            <p class="section-label">
+              FINANCEIRO
+            </p>
+
+            <h2>
+              Finanças
+            </h2>
+
+          </div>
+
+
+          <button
+            id="new-finance-button"
+            class="primary-button"
+          >
+            + Lançar
+          </button>
+
+        </div>
+
+
+        <!-- MONTH SWITCH -->
+
+        <div class="month-switch">
+
+          <button
+            id="finance-current-month-button"
+            class="month-button active"
+          >
+            Mês atual
+          </button>
+
+
+          <button
+            id="finance-next-month-button"
+            class="month-button"
+          >
+            Próximo mês
+          </button>
+
+        </div>
+
+
+        <div class="finance-month-title">
+
+          <button
+            id="finance-prev-month"
+            class="icon-button small"
+          >
+            ‹
+          </button>
+
+
+          <strong id="finance-month-label">
+            ...
+          </strong>
+
+
+          <button
+            id="finance-next-month"
+            class="icon-button small"
+          >
+            ›
+          </button>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+
+        <div class="finance-summary">
+
+          <div class="summary-item">
+
+            <span>
+              Entradas
+            </span>
+
+            <strong
+              id="finance-income"
+              class="positive"
+            >
+              R$ 0,00
+            </strong>
+
+          </div>
+
+
+          <div class="summary-item">
+
+            <span>
+              Saídas
+            </span>
+
+            <strong
+              id="finance-expense"
+              class="negative"
+            >
+              R$ 0,00
+            </strong>
+
+          </div>
+
+
+          <div class="summary-item highlight">
+
+            <span>
+              Saldo
+            </span>
+
+            <strong id="finance-balance">
+              R$ 0,00
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- CREDIT CARD -->
+
+        <div class="card credit-card-box">
+
+          <div class="card-header">
+
+            <div>
+
+              <span class="card-kicker">
+                CARTÃO DE CRÉDITO
+              </span>
+
+              <h3 id="credit-card-status">
+                Não configurado
+              </h3>
+
+            </div>
+
+
+            <span class="icon-box">
+              💳
+            </span>
+
+          </div>
+
+
+          <div class="inline-form">
+
+            <label>
+
+              Dia de fechamento
+
+              <input
+                id="credit-closing-day"
+                type="number"
+                min="1"
+                max="31"
+                placeholder="Ex: 10"
+              >
+
+            </label>
+
+
+            <button
+              id="save-credit-card-button"
+              class="secondary-button"
+            >
+              Salvar
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- CONTEXT FILTER -->
+
+        <div class="filter-box">
+
+          <label>
+            Filtrar por contexto
+
+            <input
+              id="finance-context-filter"
+              type="text"
+              placeholder="Ex: viagem teresopolis"
+            >
+
+          </label>
+
+
+          <button
+            id="clear-context-filter"
+            class="text-button"
+          >
+            Limpar
+          </button>
+
+        </div>
+
+
+        <!-- LIST -->
+
+        <div
+          id="finance-list"
+          class="list"
+        ></div>
+
+      </section>
+
+    </main>
+
+
+    <!-- ==================================================
+         NAV
+    =================================================== -->
+
+    <nav class="bottom-nav">
+
+      <button
+        class="nav-item active"
+        data-page="home"
+      >
+
+        <span>
+          ⌂
+        </span>
+
+        <small>
+          Início
+        </small>
+
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="tasks"
+      >
+
+        <span>
+          ✓
+        </span>
+
+        <small>
+          Tarefas
+        </small>
+
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="studies"
+      >
+
+        <span>
+          ◫
+        </span>
+
+        <small>
+          Estudos
+        </small>
+
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="finance"
+      >
+
+        <span>
+          R$
+        </span>
+
+        <small>
+          Financeiro
+        </small>
+
+      </button>
+
+    </nav>
+
+  </div>
+
+
+  <!-- ====================================================
+       MODAL TASK
+  ===================================================== -->
+
+  <div
+    id="task-modal"
+    class="modal hidden"
+  >
+
+    <div class="modal-backdrop"></div>
+
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <div>
+
+          <span class="card-kicker">
+            TAREFA
+          </span>
+
+          <h2>
+            Nova tarefa
+          </h2>
+
+        </div>
+
+
+        <button
+          class="close-modal icon-button"
+          data-close="task-modal"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="task-form">
 
         <label>
 
-          Primeiro aviso
+          Título
 
           <input
-            id="taskReminderAt"
-            type="datetime-local"
+            id="task-title"
+            type="text"
+            required
+            placeholder="Ex: Estudar PortSwigger"
           >
 
         </label>
 
 
-        <div class="reminder-info">
+        <label>
 
-          🔁 Depois do primeiro aviso,
-          você será lembrado novamente
-          a cada <strong>2 horas</strong>.
+          Descrição
+
+          <textarea
+            id="task-description"
+            placeholder="Opcional"
+          ></textarea>
+
+        </label>
+
+
+        <label>
+
+          Data limite
+
+          <input
+            id="task-due-date"
+            type="date"
+          >
+
+        </label>
+
+
+        <label class="checkbox-row">
+
+          <input
+            id="task-reminder-enabled"
+            type="checkbox"
+          >
+
+          <span>
+            Ativar lembrete
+          </span>
+
+        </label>
+
+
+        <div
+          id="task-reminder-options"
+          class="hidden"
+        >
+
+          <label>
+
+            Primeiro lembrete
+
+            <input
+              id="task-reminder-at"
+              type="datetime-local"
+            >
+
+          </label>
+
+
+          <p class="helper">
+            Enquanto a tarefa estiver pendente, o bot repetirá o aviso a cada 2 horas.
+          </p>
 
         </div>
 
+
+        <button
+          type="submit"
+          class="primary-button full"
+        >
+          Criar tarefa
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       MODAL STUDY
+  ===================================================== -->
+
+  <div
+    id="study-modal"
+    class="modal hidden"
+  >
+
+    <div class="modal-backdrop"></div>
+
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <div>
+
+          <span class="card-kicker">
+            ESTUDOS
+          </span>
+
+          <h2>
+            Novo estudo
+          </h2>
+
+        </div>
+
+
+        <button
+          class="close-modal icon-button"
+          data-close="study-modal"
+        >
+          ×
+        </button>
+
       </div>
 
-    </div>
+
+      <form id="study-form">
+
+        <label>
+
+          Matéria
+
+          <input
+            id="study-subject"
+            type="text"
+            required
+            placeholder="Ex: Cibersegurança"
+          >
+
+        </label>
 
 
-    <button
-      class="save-button"
-      onclick="createTask()"
-    >
-      Salvar tarefa
-    </button>
+        <label>
 
-  </div>
+          Tópico
 
-</div>
+          <input
+            id="study-topic"
+            type="text"
+            placeholder="Ex: SQL Injection"
+          >
 
-
-
-<!-- ===================================================== -->
-<!-- MODAL ESTUDO -->
-<!-- ===================================================== -->
-
-<div
-  id="studyModal"
-  class="modal"
->
-
-  <div class="modal-card">
-
-    <div class="modal-header">
-
-      <h3>
-        Novo estudo
-      </h3>
-
-      <button
-        onclick="closeModal('studyModal')"
-      >
-        ×
-      </button>
-
-    </div>
+        </label>
 
 
-    <input
-      id="studySubject"
-      placeholder="Matéria"
-    >
+        <label>
+
+          Progresso
+
+          <div class="progress-input-row">
+
+            <input
+              id="study-progress"
+              type="range"
+              min="0"
+              max="100"
+              value="0"
+            >
+
+            <span id="study-progress-value">
+              0%
+            </span>
+
+          </div>
+
+        </label>
 
 
-    <input
-      id="studyTopic"
-      placeholder="Tópico"
-    >
+        <label>
+
+          Notas
+
+          <textarea
+            id="study-notes"
+            placeholder="Observações..."
+          ></textarea>
+
+        </label>
 
 
-    <label>
+        <button
+          type="submit"
+          class="primary-button full"
+        >
+          Salvar estudo
+        </button>
 
-      Progresso (%)
-
-      <input
-        id="studyProgress"
-        type="number"
-        min="0"
-        max="100"
-        value="0"
-      >
-
-    </label>
-
-
-    <textarea
-      id="studyNotes"
-      placeholder="Anotações"
-    ></textarea>
-
-
-    <button
-      class="save-button"
-      onclick="createStudy()"
-    >
-      Salvar estudo
-    </button>
-
-  </div>
-
-</div>
-
-
-
-<!-- ===================================================== -->
-<!-- MODAL FINANÇAS -->
-<!-- ===================================================== -->
-
-<div
-  id="financeModal"
-  class="modal"
->
-
-  <div class="modal-card">
-
-    <div class="modal-header">
-
-      <h3>
-        Novo lançamento
-      </h3>
-
-      <button
-        onclick="closeModal('financeModal')"
-      >
-        ×
-      </button>
+      </form>
 
     </div>
 
-
-    <select id="financeType">
-
-      <option value="income">
-        Entrada
-      </option>
-
-      <option value="expense">
-        Saída
-      </option>
-
-    </select>
+  </div>
 
 
-    <input
-      id="financeDescription"
-      placeholder="Descrição"
-    >
+  <!-- ====================================================
+       MODAL FINANCE
+  ===================================================== -->
+
+  <div
+    id="finance-modal"
+    class="modal hidden"
+  >
+
+    <div class="modal-backdrop"></div>
 
 
-    <input
-      id="financeAmount"
-      type="number"
-      step="0.01"
-      placeholder="Valor"
-    >
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <div>
+
+          <span class="card-kicker">
+            FINANCEIRO
+          </span>
+
+          <h2>
+            Novo lançamento
+          </h2>
+
+        </div>
 
 
-    <input
-      id="financeCategory"
-      placeholder="Categoria"
-    >
+        <button
+          class="close-modal icon-button"
+          data-close="finance-modal"
+        >
+          ×
+        </button>
+
+      </div>
 
 
-    <label>
+      <form id="finance-form">
 
-      Data
+        <label>
 
-      <input
-        id="financeDate"
-        type="date"
-      >
+          Tipo
 
-    </label>
+          <select id="finance-type">
+
+            <option value="expense">
+              Saída
+            </option>
+
+            <option value="income">
+              Entrada
+            </option>
+
+          </select>
+
+        </label>
 
 
-    <button
-      class="save-button"
-      onclick="createFinance()"
-    >
-      Salvar lançamento
-    </button>
+        <label>
+
+          Descrição
+
+          <input
+            id="finance-description"
+            type="text"
+            required
+            placeholder="Ex: Gasolina"
+          >
+
+        </label>
+
+
+        <label>
+
+          Valor
+
+          <input
+            id="finance-amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            placeholder="0,00"
+          >
+
+        </label>
+
+
+        <label>
+
+          Data
+
+          <input
+            id="finance-date"
+            type="date"
+            required
+          >
+
+        </label>
+
+
+        <div id="expense-options">
+
+          <label>
+
+            Forma de pagamento
+
+            <select id="finance-payment-method">
+
+              <option value="other">
+                Pix / Débito / Dinheiro
+              </option>
+
+              <option value="credit">
+                Cartão de crédito
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <div id="reference-month-wrapper">
+
+            <label>
+
+              Lançar em
+
+              <select id="finance-reference-month">
+
+                <option value="current">
+                  Mês da compra
+                </option>
+
+                <option value="next">
+                  Próximo mês
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <label>
+
+          Contexto / evento
+
+          <input
+            id="finance-context"
+            type="text"
+            placeholder="Ex: Viagem Teresópolis"
+          >
+
+        </label>
+
+
+        <p
+          id="credit-auto-message"
+          class="helper hidden"
+        >
+          💳 No crédito, o mês da fatura será calculado automaticamente usando o fechamento do cartão.
+        </p>
+
+
+        <button
+          type="submit"
+          class="primary-button full"
+        >
+          Salvar lançamento
+        </button>
+
+      </form>
+
+    </div>
 
   </div>
 
-</div>
+
+  <!-- ====================================================
+       TOAST
+  ===================================================== -->
+
+  <div
+    id="toast"
+    class="toast hidden"
+  ></div>
 
 
-<script src="app.js"></script>
+  <script src="app.js"></script>
 
 </body>
+
 </html>
