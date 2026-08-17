@@ -6,165 +6,73 @@ const tg =
   window.Telegram?.WebApp;
 
 
-let currentUser = null;
-
-let tasks = [];
-
-let studies = [];
-
-let finances = [];
-
-
-
-// =========================================================
-// START
-// =========================================================
-
-document.addEventListener(
-  "DOMContentLoaded",
-  startApp
-);
-
-
-async function startApp() {
-
-  initTelegram();
-
-  setupNavigation();
-
-  await authenticate();
-
-
-  if (!currentUser) {
-    return;
-  }
-
-
-  await loadEverything();
-}
-
-
-
 // =========================================================
 // TELEGRAM
 // =========================================================
 
-function initTelegram() {
-
-  if (!tg) {
-    return;
-  }
-
+if (tg) {
 
   tg.ready();
 
   tg.expand();
 
-
   try {
 
-    tg.setHeaderColor(
-      "#080b10"
-    );
+    tg.setHeaderColor("#080b10");
 
-    tg.setBackgroundColor(
-      "#080b10"
-    );
+    tg.setBackgroundColor("#080b10");
 
-  } catch {}
+  } catch (_) {}
 
-
-  const unsafeUser =
-    tg.initDataUnsafe?.user;
-
-
-  if (unsafeUser) {
-
-    updateUserHeader(
-      unsafeUser
-    );
-  }
 }
 
 
+// =========================================================
+// STATE
+// =========================================================
 
-function updateUserHeader(
-  user
-) {
+const state = {
 
-  const greeting =
-    document.getElementById(
-      "greeting"
-    );
+  user: null,
 
+  tasks: [],
 
-  const avatar =
-    document.getElementById(
-      "avatar"
-    );
+  studies: [],
 
+  finances: [],
 
-  if (
-    user?.first_name
-  ) {
+  taskFilter:
+    "pending",
 
-    greeting.textContent =
-      `Olá, ${user.first_name}`;
+  financeMonth:
+    getCurrentMonth(),
 
+  financeContext:
+    "",
 
-    avatar.textContent =
-      user.first_name
-        .charAt(0)
-        .toUpperCase();
+  creditCard: {
+    configured: false,
+    closing_day: null
   }
-}
+
+};
 
 
 
 // =========================================================
-// AUTENTICAÇÃO
+// ELEMENTS
 // =========================================================
 
-async function authenticate() {
-
-  if (!tg?.initData) {
-
-    alert(
-      "Abra este aplicativo pelo Telegram."
-    );
-
-    return;
-  }
+const loading =
+  document.getElementById("loading");
 
 
-  const response =
-    await api(
-      "/auth/me",
-      {
-        method: "GET"
-      }
-    );
+const errorBox =
+  document.getElementById("error-box");
 
 
-  if (!response?.ok) {
-
-    alert(
-      response?.error ||
-      "Erro de autenticação."
-    );
-
-    return;
-  }
-
-
-  currentUser =
-    response.user;
-
-
-  updateUserHeader(
-    currentUser
-  );
-}
+const toast =
+  document.getElementById("toast");
 
 
 
@@ -178,297 +86,493 @@ async function api(
 ) {
 
   const headers = {
-
-    ...(options.headers || {}),
+    "Content-Type":
+      "application/json",
 
     "X-Telegram-Init-Data":
-      tg?.initData || ""
+      tg?.initData || "",
 
+    ...(options.headers || {})
   };
 
 
-  if (
-    options.body
-  ) {
+  const response =
+    await fetch(
+      `${API_URL}${path}`,
+      {
+        ...options,
+        headers
+      }
+    );
 
-    headers[
-      "Content-Type"
-    ] =
-      "application/json";
-  }
+
+  let data;
 
 
   try {
 
-    const response =
-      await fetch(
-        API_URL + path,
-        {
-          ...options,
-          headers
-        }
-      );
-
-
-    const data =
+    data =
       await response.json();
 
+  } catch {
 
-    return data;
+    data = {
+      ok: false,
+      error:
+        "Resposta inválida do servidor."
+    };
+
+  }
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      data.error ||
+      "Erro no servidor."
+    );
+
+  }
+
+
+  return data;
+}
+
+
+
+// =========================================================
+// INIT
+// =========================================================
+
+async function init() {
+
+  setLoading(true);
+
+
+  try {
+
+    await loadUser();
+
+    await Promise.all([
+      loadTasks(),
+      loadStudies(),
+      loadCreditCard()
+    ]);
+
+
+    await Promise.all([
+      loadHomeFinance(),
+      loadFinance()
+    ]);
+
+
+    renderEverything();
+
+
+    setLoading(false);
 
 
   } catch (error) {
 
-    console.error(
-      error
+    setLoading(false);
+
+    showError(
+      error.message
     );
 
-
-    return {
-
-      ok: false,
-
-      error:
-        "Falha ao conectar ao servidor."
-
-    };
   }
+
 }
+
+
+init();
 
 
 
 // =========================================================
-// LOAD
+// USER
 // =========================================================
 
-async function loadEverything() {
-
-  await Promise.all([
-    loadTasks(),
-    loadStudies(),
-    loadFinances()
-  ]);
-
-
-  renderHome();
-}
-
-
-
-async function loadTasks() {
+async function loadUser() {
 
   const data =
     await api(
-      "/tasks",
-      {
-        method: "GET"
-      }
+      "/auth/me"
     );
 
 
-  if (!data.ok) {
-
-    console.error(
-      data.error
-    );
-
-    return;
-  }
+  state.user =
+    data.user;
 
 
-  tasks =
-    data.tasks || [];
+  const name =
+    state.user.first_name ||
+    state.user.username ||
+    "Usuário";
 
 
-  renderTasks();
-}
+  document
+    .getElementById(
+      "user-name"
+    )
+    .textContent =
+      name;
 
-
-
-async function loadStudies() {
-
-  const data =
-    await api(
-      "/studies",
-      {
-        method: "GET"
-      }
-    );
-
-
-  if (!data.ok) {
-    return;
-  }
-
-
-  studies =
-    data.studies || [];
-
-
-  renderStudies();
-}
-
-
-
-async function loadFinances() {
-
-  const data =
-    await api(
-      "/finances",
-      {
-        method: "GET"
-      }
-    );
-
-
-  if (!data.ok) {
-    return;
-  }
-
-
-  finances =
-    data.finances || [];
-
-
-  renderFinances(
-    data.summary
-  );
 }
 
 
 
 // =========================================================
-// NAV
+// NAVIGATION
 // =========================================================
 
-function setupNavigation() {
+document
+  .querySelectorAll(
+    ".nav-item"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        showPage(
+          button.dataset.page
+        );
+
+      }
+    );
+
+  });
+
+
+
+document
+  .querySelectorAll(
+    "[data-go-page]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      async () => {
+
+        if (
+          button.dataset.monthMode ===
+          "next"
+        ) {
+
+          state.financeMonth =
+            addMonths(
+              getCurrentMonth(),
+              1
+            );
+
+
+          await loadFinance();
+
+        }
+
+
+        showPage(
+          button.dataset.goPage
+        );
+
+      }
+    );
+
+  });
+
+
+
+function showPage(page) {
+
+  document
+    .querySelectorAll(
+      ".page"
+    )
+    .forEach(element => {
+
+      element.classList
+        .remove("active");
+
+    });
+
+
+  document
+    .getElementById(
+      `page-${page}`
+    )
+    .classList
+    .add("active");
+
 
   document
     .querySelectorAll(
       ".nav-item"
     )
-    .forEach(
-      button => {
+    .forEach(button => {
 
-        button.addEventListener(
-          "click",
-          () => {
-
-            const page =
-              button.dataset.page;
-
-
-            document
-              .querySelectorAll(
-                ".nav-item"
-              )
-              .forEach(
-                item =>
-                  item
-                    .classList
-                    .remove(
-                      "active"
-                    )
-              );
-
-
-            button
-              .classList
-              .add(
-                "active"
-              );
-
-
-            document
-              .querySelectorAll(
-                ".page"
-              )
-              .forEach(
-                item =>
-                  item
-                    .classList
-                    .remove(
-                      "active"
-                    )
-              );
-
-
-            document
-              .getElementById(
-                `page-${page}`
-              )
-              .classList
-              .add(
-                "active"
-              );
-          }
+      button.classList
+        .toggle(
+          "active",
+          button.dataset.page === page
         );
-      }
-    );
+
+    });
+
+
+  const titles = {
+
+    home:
+      "Início",
+
+    tasks:
+      "Tarefas",
+
+    studies:
+      "Estudos",
+
+    finance:
+      "Financeiro"
+
+  };
+
+
+  document
+    .getElementById(
+      "page-title"
+    )
+    .textContent =
+      titles[page] || "Command Center";
+
+
+  window.scrollTo(
+    {
+      top: 0,
+      behavior: "smooth"
+    }
+  );
+
 }
 
 
 
 // =========================================================
-// REMINDER FORM
+// REFRESH
 // =========================================================
 
-function toggleReminderFields() {
+document
+  .getElementById(
+    "refresh-button"
+  )
+  .addEventListener(
+    "click",
+    async () => {
 
-  const enabled =
-    document
-      .getElementById(
-        "taskReminderEnabled"
-      )
-      .checked;
-
-
-  const fields =
-    document
-      .getElementById(
-        "reminderFields"
-      );
+      setLoading(true);
 
 
-  if (enabled) {
+      try {
 
-    fields
-      .classList
-      .remove(
-        "hidden"
-      );
+        await Promise.all([
+          loadTasks(),
+          loadStudies(),
+          loadCreditCard(),
+          loadHomeFinance(),
+          loadFinance()
+        ]);
 
 
-    const input =
-      document
-        .getElementById(
-          "taskReminderAt"
+        renderEverything();
+
+        showToast(
+          "Atualizado"
         );
 
 
-    if (!input.value) {
+      } catch (error) {
 
-      const future =
-        new Date(
-          Date.now() +
-          5 * 60 * 1000
+        showToast(
+          error.message
         );
 
+      }
 
-      input.value =
-        dateToLocalInput(
-          future
-        );
+
+      setLoading(false);
+
     }
+  );
 
-  } else {
 
-    fields
-      .classList
-      .add(
-        "hidden"
-      );
+
+// =========================================================
+// HOME
+// =========================================================
+
+async function loadHomeFinance() {
+
+  const currentMonth =
+    getCurrentMonth();
+
+
+  const nextMonth =
+    addMonths(
+      currentMonth,
+      1
+    );
+
+
+  const [
+    current,
+    next
+  ] =
+    await Promise.all([
+
+      api(
+        `/finances?month=${currentMonth}`
+      ),
+
+      api(
+        `/finances?month=${nextMonth}`
+      )
+
+    ]);
+
+
+  state.homeCurrentFinance =
+    current;
+
+
+  state.homeNextFinance =
+    next;
+
+}
+
+
+
+function renderHome() {
+
+  const current =
+    state.homeCurrentFinance;
+
+
+  const next =
+    state.homeNextFinance;
+
+
+  if (!current || !next) {
+    return;
   }
+
+
+  setText(
+    "home-current-month",
+    current.month_label
+  );
+
+
+  setText(
+    "home-balance",
+    formatMoney(
+      current.summary.balance
+    )
+  );
+
+
+  setText(
+    "home-income",
+    formatMoney(
+      current.summary.income
+    )
+  );
+
+
+  setText(
+    "home-expense",
+    formatMoney(
+      current.summary.expense
+    )
+  );
+
+
+  setText(
+    "home-next-month",
+    next.month_label
+  );
+
+
+  setText(
+    "home-next-expense",
+    formatMoney(
+      next.summary.expense
+    )
+  );
+
+
+  setText(
+    "home-next-balance",
+    formatMoney(
+      next.summary.balance
+    )
+  );
+
+
+  const pending =
+    state.tasks.filter(
+      task =>
+        task.status === "pending"
+    );
+
+
+  setText(
+    "home-pending-tasks",
+    pending.length
+  );
+
+
+  setText(
+    "home-card-closing",
+    state.creditCard.configured
+      ? `Dia ${state.creditCard.closing_day}`
+      : "--"
+  );
+
+
+  const container =
+    document.getElementById(
+      "home-task-list"
+    );
+
+
+  const latest =
+    pending.slice(0, 4);
+
+
+  if (!latest.length) {
+
+    container.innerHTML =
+      emptyState(
+        "Nenhuma tarefa pendente."
+      );
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    latest
+      .map(
+        task =>
+          taskHtml(
+            task,
+            true
+          )
+      )
+      .join("");
+
 }
 
 
@@ -477,412 +581,427 @@ function toggleReminderFields() {
 // TASKS
 // =========================================================
 
+async function loadTasks() {
+
+  const data =
+    await api(
+      "/tasks"
+    );
+
+
+  state.tasks =
+    data.tasks || [];
+
+}
+
+
+
 function renderTasks() {
 
   const container =
     document.getElementById(
-      "tasksList"
+      "task-list"
     );
+
+
+  let tasks =
+    [...state.tasks];
+
+
+  if (
+    state.taskFilter !== "all"
+  ) {
+
+    tasks =
+      tasks.filter(
+        task =>
+          task.status ===
+          state.taskFilter
+      );
+
+  }
 
 
   if (!tasks.length) {
 
-    container.innerHTML = `
-      <div class="empty">
-        Nenhuma tarefa cadastrada.
-      </div>
-    `;
+    container.innerHTML =
+      emptyState(
+        "Nenhuma tarefa aqui."
+      );
 
     return;
+
   }
 
 
   container.innerHTML =
     tasks
       .map(
-        task => {
-
-          const completed =
-            task.status ===
-            "completed";
-
-
-          const reminderEnabled =
-            Number(
-              task.reminder_enabled
-            ) === 1;
-
-
-          return `
-
-            <article
-              class="
-                list-card
-                ${
-                  completed
-                    ? "completed"
-                    : ""
-                }
-              "
-            >
-
-              <div
-                class="list-card-content"
-              >
-
-                <h3>
-                  ${
-                    escapeHtml(
-                      task.title
-                    )
-                  }
-                </h3>
-
-
-                ${
-                  task.description
-                    ? `
-                      <p>
-                        ${
-                          escapeHtml(
-                            task.description
-                          )
-                        }
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  task.due_date
-                    ? `
-                      <p>
-                        Prazo:
-                        ${
-                          formatDate(
-                            task.due_date
-                          )
-                        }
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                <span
-                  class="
-                    status
-                    ${
-                      completed
-                        ? "completed"
-                        : "pending"
-                    }
-                  "
-                >
-                  ${
-                    completed
-                      ? "Concluída"
-                      : "Pendente"
-                  }
-                </span>
-
-
-                ${
-                  reminderEnabled &&
-                  !completed
-
-                    ? `
-
-                      <div
-                        class="reminder-badge"
-                      >
-                        🔔 A cada 2 horas
-                      </div>
-
-
-                      ${
-                        task.next_reminder_at
-
-                          ? `
-                            <div
-                              class="next-reminder"
-                            >
-                              Próximo:
-                              ${
-                                formatDateTime(
-                                  task.next_reminder_at
-                                )
-                              }
-                            </div>
-                          `
-
-                          : ""
-                      }
-
-                    `
-
-                    : ""
-                }
-
-              </div>
-
-
-              <div
-                class="card-actions"
-              >
-
-                <button
-                  class="icon-button"
-                  title="
-                    ${
-                      completed
-                        ? "Reabrir"
-                        : "Concluir"
-                    }
-                  "
-                  onclick="
-                    toggleTask(
-                      ${task.id},
-                      '${task.status}'
-                    )
-                  "
-                >
-                  ${
-                    completed
-                      ? "↶"
-                      : "✓"
-                  }
-                </button>
-
-
-                ${
-                  reminderEnabled &&
-                  !completed
-
-                    ? `
-                      <button
-                        class="
-                          reminder-disable-button
-                        "
-                        onclick="
-                          disableReminder(
-                            ${task.id}
-                          )
-                        "
-                      >
-                        🔕 Parar
-                      </button>
-                    `
-
-                    : ""
-                }
-
-
-                <button
-                  class="
-                    icon-button
-                    danger
-                  "
-                  onclick="
-                    deleteTask(
-                      ${task.id}
-                    )
-                  "
-                >
-                  ×
-                </button>
-
-              </div>
-
-            </article>
-
-          `;
-        }
+        task =>
+          taskHtml(
+            task,
+            false
+          )
       )
       .join("");
+
 }
 
 
 
-async function createTask() {
+function taskHtml(
+  task,
+  compact = false
+) {
 
-  const title =
-    document
-      .getElementById(
-        "taskTitle"
-      )
-      .value
-      .trim();
-
-
-  const description =
-    document
-      .getElementById(
-        "taskDescription"
-      )
-      .value
-      .trim();
+  const completed =
+    task.status ===
+    "completed";
 
 
-  const dueDate =
-    document
-      .getElementById(
-        "taskDueDate"
-      )
-      .value;
+  const reminder =
+    Number(
+      task.reminder_enabled
+    ) === 1;
 
 
-  const reminderEnabled =
-    document
-      .getElementById(
-        "taskReminderEnabled"
-      )
-      .checked;
+  return `
+    <article
+      class="list-item
+      ${completed ? "completed" : ""}"
+    >
+
+      <div class="list-item-top">
+
+        <div>
+
+          <h3>
+            ${escapeHtml(task.title)}
+          </h3>
+
+          ${
+            task.description
+              ? `
+                <p>
+                  ${escapeHtml(task.description)}
+                </p>
+              `
+              : ""
+          }
+
+        </div>
+
+        <span>
+          ${completed ? "✓" : "○"}
+        </span>
+
+      </div>
 
 
-  const reminderInput =
-    document
-      .getElementById(
-        "taskReminderAt"
-      )
-      .value;
+      <div class="badges">
+
+        ${
+          task.due_date
+            ? `
+              <span class="badge">
+                📅 ${formatDate(task.due_date)}
+              </span>
+            `
+            : ""
+        }
+
+        ${
+          reminder
+            ? `
+              <span class="badge">
+                🔔 Lembrete ativo
+              </span>
+            `
+            : ""
+        }
+
+      </div>
 
 
-  if (!title) {
+      ${
+        compact
+          ? ""
+          : `
+            <div class="item-actions">
 
-    alert(
-      "Digite o título da tarefa."
-    );
+              <button
+                class="small-button
+                ${completed
+                  ? ""
+                  : "success"}"
+                onclick="
+                  toggleTask(
+                    ${task.id},
+                    '${task.status}'
+                  )
+                "
+              >
 
-    return;
-  }
+                ${
+                  completed
+                    ? "Reabrir"
+                    : "Concluir"
+                }
 
-
-  let reminderAt =
-    null;
-
-
-  if (
-    reminderEnabled
-  ) {
-
-    if (!reminderInput) {
-
-      alert(
-        "Escolha a data e hora do primeiro lembrete."
-      );
-
-      return;
-    }
-
-
-    const reminderDate =
-      new Date(
-        reminderInput
-      );
+              </button>
 
 
-    if (
-      Number.isNaN(
-        reminderDate.getTime()
-      )
-    ) {
-
-      alert(
-        "Horário de lembrete inválido."
-      );
-
-      return;
-    }
-
-
-    if (
-      reminderDate.getTime()
-      <= Date.now()
-    ) {
-
-      alert(
-        "Escolha um horário futuro para o lembrete."
-      );
-
-      return;
-    }
+              ${
+                reminder
+                  ? `
+                    <button
+                      class="small-button"
+                      onclick="
+                        disableReminder(
+                          ${task.id}
+                        )
+                      "
+                    >
+                      🔕 Parar
+                    </button>
+                  `
+                  : ""
+              }
 
 
-    reminderAt =
-      reminderDate
-        .toISOString();
-  }
+              <button
+                class="small-button danger"
+                onclick="
+                  deleteTask(
+                    ${task.id}
+                  )
+                "
+              >
+                Excluir
+              </button>
+
+            </div>
+          `
+      }
+
+    </article>
+  `;
+
+}
 
 
-  const result =
-    await api(
-      "/tasks",
-      {
 
-        method: "POST",
+// =========================================================
+// TASK FILTER
+// =========================================================
 
-        body:
-          JSON.stringify({
+document
+  .querySelectorAll(
+    "[data-task-filter]"
+  )
+  .forEach(button => {
 
-            title,
+    button.addEventListener(
+      "click",
+      () => {
 
-            description,
+        state.taskFilter =
+          button.dataset.taskFilter;
 
-            due_date:
-              dueDate || null,
 
-            reminder_enabled:
-              reminderEnabled,
+        document
+          .querySelectorAll(
+            "[data-task-filter]"
+          )
+          .forEach(item => {
 
-            reminder_at:
-              reminderAt
+            item.classList
+              .toggle(
+                "active",
+                item === button
+              );
 
-          })
+          });
+
+
+        renderTasks();
 
       }
     );
 
-
-  if (!result.ok) {
-
-    alert(
-      result.error
-    );
-
-    return;
-  }
+  });
 
 
-  closeModal(
-    "taskModal"
+
+// =========================================================
+// TASK MODAL
+// =========================================================
+
+document
+  .getElementById(
+    "new-task-button"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      openModal(
+        "task-modal"
+      );
+
+    }
   );
 
 
-  clearTaskForm();
+
+document
+  .getElementById(
+    "task-reminder-enabled"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      document
+        .getElementById(
+          "task-reminder-options"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          !event.target.checked
+        );
+
+    }
+  );
 
 
-  await loadTasks();
+
+document
+  .getElementById(
+    "task-form"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
 
 
-  renderHome();
-}
+      const reminderEnabled =
+        document
+          .getElementById(
+            "task-reminder-enabled"
+          )
+          .checked;
+
+
+      const reminderAt =
+        document
+          .getElementById(
+            "task-reminder-at"
+          )
+          .value;
+
+
+      try {
+
+        await api(
+          "/tasks",
+          {
+
+            method: "POST",
+
+            body:
+              JSON.stringify({
+
+                title:
+                  valueOf(
+                    "task-title"
+                  ),
+
+                description:
+                  valueOf(
+                    "task-description"
+                  ),
+
+                due_date:
+                  valueOf(
+                    "task-due-date"
+                  ) || null,
+
+                reminder_enabled:
+                  reminderEnabled,
+
+                reminder_at:
+                  reminderEnabled &&
+                  reminderAt
+                    ? new Date(
+                        reminderAt
+                      ).toISOString()
+                    : null
+
+              })
+
+          }
+        );
+
+
+        closeModal(
+          "task-modal"
+        );
+
+
+        event.target.reset();
+
+
+        document
+          .getElementById(
+            "task-reminder-options"
+          )
+          .classList
+          .add("hidden");
+
+
+        await loadTasks();
+
+
+        renderTasks();
+
+        renderHome();
+
+
+        showToast(
+          "Tarefa criada"
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message
+        );
+
+      }
+
+    }
+  );
 
 
 
 async function toggleTask(
   id,
-  status
+  currentStatus
 ) {
 
-  const newStatus =
-    status === "completed"
-      ? "pending"
-      : "completed";
+  const status =
+    currentStatus === "pending"
+      ? "completed"
+      : "pending";
 
 
-  const result =
+  try {
+
     await api(
       `/tasks/${id}`,
       {
@@ -891,27 +1010,29 @@ async function toggleTask(
 
         body:
           JSON.stringify({
-            status:
-              newStatus
+            status
           })
 
       }
     );
 
 
-  if (!result.ok) {
+    await loadTasks();
 
-    alert(
-      result.error
+
+    renderTasks();
+
+    renderHome();
+
+
+  } catch (error) {
+
+    showToast(
+      error.message
     );
 
-    return;
   }
 
-
-  await loadTasks();
-
-  renderHome();
 }
 
 
@@ -920,18 +1041,8 @@ async function disableReminder(
   id
 ) {
 
-  const confirmDisable =
-    confirm(
-      "Desativar permanentemente o lembrete desta tarefa?"
-    );
+  try {
 
-
-  if (!confirmDisable) {
-    return;
-  }
-
-
-  const result =
     await api(
       `/tasks/${id}/reminder/disable`,
       {
@@ -940,25 +1051,27 @@ async function disableReminder(
     );
 
 
-  if (!result.ok) {
+    await loadTasks();
 
-    alert(
-      result.error
+
+    renderTasks();
+
+    renderHome();
+
+
+    showToast(
+      "Lembrete desativado"
     );
 
-    return;
+
+  } catch (error) {
+
+    showToast(
+      error.message
+    );
+
   }
 
-
-  await loadTasks();
-
-
-  renderHome();
-
-
-  telegramHaptic(
-    "success"
-  );
 }
 
 
@@ -969,14 +1082,15 @@ async function deleteTask(
 
   if (
     !confirm(
-      "Excluir esta tarefa?"
+      "Excluir essa tarefa?"
     )
   ) {
     return;
   }
 
 
-  const result =
+  try {
+
     await api(
       `/tasks/${id}`,
       {
@@ -985,19 +1099,27 @@ async function deleteTask(
     );
 
 
-  if (!result.ok) {
+    await loadTasks();
 
-    alert(
-      result.error
+
+    renderTasks();
+
+    renderHome();
+
+
+    showToast(
+      "Tarefa excluída"
     );
 
-    return;
+
+  } catch (error) {
+
+    showToast(
+      error.message
+    );
+
   }
 
-
-  await loadTasks();
-
-  renderHome();
 }
 
 
@@ -1006,199 +1128,248 @@ async function deleteTask(
 // STUDIES
 // =========================================================
 
+async function loadStudies() {
+
+  const data =
+    await api(
+      "/studies"
+    );
+
+
+  state.studies =
+    data.studies || [];
+
+}
+
+
+
 function renderStudies() {
 
   const container =
     document.getElementById(
-      "studiesList"
+      "study-list"
     );
 
 
-  if (!studies.length) {
+  if (!state.studies.length) {
 
-    container.innerHTML = `
-      <div class="empty">
-        Nenhum estudo cadastrado.
-      </div>
-    `;
+    container.innerHTML =
+      emptyState(
+        "Nenhum estudo registrado."
+      );
 
     return;
+
   }
 
 
   container.innerHTML =
-    studies
-      .map(
-        study => `
+    state.studies
+      .map(study => `
 
-          <article
-            class="list-card"
-          >
+        <article class="list-item">
 
-            <div
-              class="list-card-content"
-            >
+          <div class="list-item-top">
+
+            <div>
 
               <h3>
-                ${
-                  escapeHtml(
-                    study.subject
-                  )
-                }
+                ${escapeHtml(study.subject)}
               </h3>
-
 
               ${
                 study.topic
-
                   ? `
                     <p>
-                      ${
-                        escapeHtml(
-                          study.topic
-                        )
-                      }
+                      ${escapeHtml(study.topic)}
                     </p>
                   `
-
                   : ""
               }
-
-
-              <p>
-                Progresso:
-                ${study.progress}%
-              </p>
-
-
-              <div class="progress">
-
-                <div
-                  style="
-                    width:
-                    ${study.progress}%;
-                  "
-                ></div>
-
-              </div>
 
             </div>
 
 
-            <button
-              class="
-                icon-button
-                danger
+            <strong>
+              ${Number(study.progress)}%
+            </strong>
+
+          </div>
+
+
+          <div class="progress-bar">
+
+            <div
+              style="
+                width:
+                ${Number(study.progress)}%
               "
+            ></div>
+
+          </div>
+
+
+          ${
+            study.notes
+              ? `
+                <p>
+                  ${escapeHtml(study.notes)}
+                </p>
+              `
+              : ""
+          }
+
+
+          <div class="item-actions">
+
+            <button
+              class="small-button danger"
               onclick="
                 deleteStudy(
                   ${study.id}
                 )
               "
             >
-              ×
+              Excluir
             </button>
 
-          </article>
+          </div>
 
-        `
-      )
+        </article>
+
+      `)
       .join("");
+
 }
 
 
 
-async function createStudy() {
+// =========================================================
+// STUDY MODAL
+// =========================================================
 
-  const subject =
-    document
-      .getElementById(
-        "studySubject"
-      )
-      .value
-      .trim();
+document
+  .getElementById(
+    "new-study-button"
+  )
+  .addEventListener(
+    "click",
+    () => {
 
+      openModal(
+        "study-modal"
+      );
 
-  const topic =
-    document
-      .getElementById(
-        "studyTopic"
-      )
-      .value
-      .trim();
-
-
-  const progress =
-    Number(
-      document
-        .getElementById(
-          "studyProgress"
-        )
-        .value
-    );
-
-
-  const notes =
-    document
-      .getElementById(
-        "studyNotes"
-      )
-      .value
-      .trim();
-
-
-  if (!subject) {
-
-    alert(
-      "Digite a matéria."
-    );
-
-    return;
-  }
-
-
-  const result =
-    await api(
-      "/studies",
-      {
-
-        method: "POST",
-
-        body:
-          JSON.stringify({
-            subject,
-            topic,
-            progress,
-            notes
-          })
-
-      }
-    );
-
-
-  if (!result.ok) {
-
-    alert(
-      result.error
-    );
-
-    return;
-  }
-
-
-  closeModal(
-    "studyModal"
+    }
   );
 
 
-  clearStudyForm();
+
+document
+  .getElementById(
+    "study-progress"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      setText(
+        "study-progress-value",
+        `${event.target.value}%`
+      );
+
+    }
+  );
 
 
-  await loadStudies();
+
+document
+  .getElementById(
+    "study-form"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
 
 
-  renderHome();
-}
+      try {
+
+        await api(
+          "/studies",
+          {
+
+            method:
+              "POST",
+
+            body:
+              JSON.stringify({
+
+                subject:
+                  valueOf(
+                    "study-subject"
+                  ),
+
+                topic:
+                  valueOf(
+                    "study-topic"
+                  ),
+
+                progress:
+                  Number(
+                    valueOf(
+                      "study-progress"
+                    )
+                  ),
+
+                notes:
+                  valueOf(
+                    "study-notes"
+                  )
+
+              })
+
+          }
+        );
+
+
+        closeModal(
+          "study-modal"
+        );
+
+
+        event.target
+          .reset();
+
+
+        setText(
+          "study-progress-value",
+          "0%"
+        );
+
+
+        await loadStudies();
+
+
+        renderStudies();
+
+
+        showToast(
+          "Estudo salvo"
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message
+        );
+
+      }
+
+    }
+  );
 
 
 
@@ -1215,327 +1386,882 @@ async function deleteStudy(
   }
 
 
-  const result =
+  try {
+
     await api(
       `/studies/${id}`,
       {
-        method: "DELETE"
+        method:
+          "DELETE"
       }
     );
 
 
-  if (!result.ok) {
+    await loadStudies();
 
-    alert(
-      result.error
+
+    renderStudies();
+
+
+    showToast(
+      "Estudo excluído"
     );
 
-    return;
+
+  } catch (error) {
+
+    showToast(
+      error.message
+    );
+
   }
 
-
-  await loadStudies();
-
-
-  renderHome();
 }
 
 
 
 // =========================================================
-// FINANCES
+// CREDIT CARD
 // =========================================================
 
-function renderFinances(
-  summary
-) {
+async function loadCreditCard() {
 
-  const income =
-    Number(
-      summary?.income || 0
+  const data =
+    await api(
+      "/credit-card"
     );
 
 
-  const expense =
-    Number(
-      summary?.expense || 0
+  state.creditCard = {
+
+    configured:
+      data.configured,
+
+    closing_day:
+      data.closing_day
+
+  };
+
+}
+
+
+
+function renderCreditCard() {
+
+  const input =
+    document.getElementById(
+      "credit-closing-day"
     );
 
 
-  const balance =
-    Number(
-      summary?.balance || 0
+  const status =
+    document.getElementById(
+      "credit-card-status"
+    );
+
+
+  if (
+    state.creditCard.configured
+  ) {
+
+    input.value =
+      state.creditCard.closing_day;
+
+
+    status.textContent =
+      `Fecha dia ${state.creditCard.closing_day}`;
+
+  } else {
+
+    input.value = "";
+
+    status.textContent =
+      "Não configurado";
+
+  }
+
+}
+
+
+
+document
+  .getElementById(
+    "save-credit-card-button"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const closingDay =
+        Number(
+          valueOf(
+            "credit-closing-day"
+          )
+        );
+
+
+      if (
+        !Number.isInteger(
+          closingDay
+        ) ||
+        closingDay < 1 ||
+        closingDay > 31
+      ) {
+
+        showToast(
+          "Digite um dia entre 1 e 31"
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        await api(
+          "/credit-card",
+          {
+
+            method:
+              "POST",
+
+            body:
+              JSON.stringify({
+                closing_day:
+                  closingDay
+              })
+
+          }
+        );
+
+
+        await loadCreditCard();
+
+
+        renderCreditCard();
+
+        renderHome();
+
+
+        showToast(
+          "Cartão configurado"
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+
+
+// =========================================================
+// FINANCE
+// =========================================================
+
+async function loadFinance() {
+
+  let path =
+    `/finances?month=${state.financeMonth}`;
+
+
+  if (
+    state.financeContext
+  ) {
+
+    path +=
+      `&context=${encodeURIComponent(
+        state.financeContext
+      )}`;
+
+  }
+
+
+  const data =
+    await api(path);
+
+
+  state.financeData =
+    data;
+
+
+  state.finances =
+    data.finances || [];
+
+}
+
+
+
+function renderFinance() {
+
+  const data =
+    state.financeData;
+
+
+  if (!data) {
+    return;
+  }
+
+
+  setText(
+    "finance-month-label",
+    data.month_label
+  );
+
+
+  setText(
+    "finance-income",
+    formatMoney(
+      data.summary.income
+    )
+  );
+
+
+  setText(
+    "finance-expense",
+    formatMoney(
+      data.summary.expense
+    )
+  );
+
+
+  setText(
+    "finance-balance",
+    formatMoney(
+      data.summary.balance
+    )
+  );
+
+
+  const current =
+    getCurrentMonth();
+
+
+  const next =
+    addMonths(
+      current,
+      1
     );
 
 
   document
     .getElementById(
-      "financeIncome"
+      "finance-current-month-button"
     )
-    .textContent =
-      money(income);
+    .classList
+    .toggle(
+      "active",
+      state.financeMonth ===
+      current
+    );
 
 
   document
     .getElementById(
-      "financeExpense"
+      "finance-next-month-button"
     )
-    .textContent =
-      money(expense);
-
-
-  document
-    .getElementById(
-      "financeBalance"
-    )
-    .textContent =
-      money(balance);
+    .classList
+    .toggle(
+      "active",
+      state.financeMonth ===
+      next
+    );
 
 
   const container =
     document.getElementById(
-      "financesList"
+      "finance-list"
     );
 
 
-  if (!finances.length) {
+  if (
+    !state.finances.length
+  ) {
 
-    container.innerHTML = `
-      <div class="empty">
-        Nenhum lançamento.
-      </div>
-    `;
+    container.innerHTML =
+      emptyState(
+        "Nenhum lançamento neste mês."
+      );
 
     return;
+
   }
 
 
   container.innerHTML =
-    finances
-      .map(
-        item => {
-
-          const incomeItem =
-            item.type ===
-            "income";
-
-
-          return `
-
-            <article
-              class="list-card"
-            >
-
-              <div
-                class="
-                  list-card-content
-                "
-              >
-
-                <h3>
-                  ${
-                    escapeHtml(
-                      item.description
-                    )
-                  }
-                </h3>
-
-
-                <p>
-
-                  ${
-                    escapeHtml(
-                      item.category ||
-                      "Sem categoria"
-                    )
-                  }
-
-                  ·
-
-                  ${
-                    formatDate(
-                      item.date
-                    )
-                  }
-
-                </p>
-
-
-                <strong
-                  class="
-                    ${
-                      incomeItem
-                        ? "positive"
-                        : "negative"
-                    }
-                  "
-                >
-
-                  ${
-                    incomeItem
-                      ? "+"
-                      : "-"
-                  }
-
-                  ${
-                    money(
-                      item.amount
-                    )
-                  }
-
-                </strong>
-
-              </div>
-
-
-              <button
-                class="
-                  icon-button
-                  danger
-                "
-                onclick="
-                  deleteFinance(
-                    ${item.id}
-                  )
-                "
-              >
-                ×
-              </button>
-
-            </article>
-
-          `;
-        }
-      )
+    state.finances
+      .map(financeHtml)
       .join("");
+
 }
 
 
 
-async function createFinance() {
+function financeHtml(item) {
 
-  const type =
-    document
-      .getElementById(
-        "financeType"
-      )
-      .value;
+  const expense =
+    item.type ===
+    "expense";
 
 
-  const description =
-    document
-      .getElementById(
-        "financeDescription"
-      )
-      .value
-      .trim();
+  const credit =
+    item.payment_method ===
+    "credit";
 
 
-  const amount =
-    Number(
-      document
-        .getElementById(
-          "financeAmount"
-        )
-        .value
-    );
+  return `
+
+    <article class="list-item">
+
+      <div class="list-item-top">
+
+        <div>
+
+          <h3>
+            ${escapeHtml(
+              item.description
+            )}
+          </h3>
+
+          <p>
+            ${formatDate(item.date)}
+          </p>
+
+        </div>
 
 
-  const category =
-    document
-      .getElementById(
-        "financeCategory"
-      )
-      .value
-      .trim();
+        <span
+          class="
+            item-value
+            ${expense
+              ? "negative"
+              : "positive"}
+          "
+        >
+          ${expense ? "-" : "+"}
+          ${formatMoney(item.amount)}
+        </span>
+
+      </div>
 
 
-  const date =
-    document
-      .getElementById(
-        "financeDate"
-      )
-      .value;
+      <div class="badges">
+
+        ${
+          credit
+            ? `
+              <span class="badge credit">
+                💳 Crédito
+              </span>
+            `
+            : ""
+        }
 
 
-  if (!description) {
-
-    alert(
-      "Digite uma descrição."
-    );
-
-    return;
-  }
-
-
-  if (
-    !amount ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Digite um valor válido."
-    );
-
-    return;
-  }
+        ${
+          item.context
+            ? `
+              <span class="badge context">
+                🏷️ ${escapeHtml(
+                  capitalize(
+                    item.context
+                  )
+                )}
+              </span>
+            `
+            : ""
+        }
 
 
-  if (!date) {
+        ${
+          item.category
+            ? `
+              <span class="badge">
+                ${escapeHtml(
+                  item.category
+                )}
+              </span>
+            `
+            : ""
+        }
 
-    alert(
-      "Escolha uma data."
-    );
-
-    return;
-  }
-
-
-  const result =
-    await api(
-      "/finances",
-      {
-
-        method: "POST",
-
-        body:
-          JSON.stringify({
-            type,
-            description,
-            amount,
-            category,
-            date
-          })
-
-      }
-    );
+      </div>
 
 
-  if (!result.ok) {
+      <div class="item-actions">
 
-    alert(
-      result.error
-    );
+        <button
+          class="small-button danger"
+          onclick="
+            deleteFinance(
+              ${item.id}
+            )
+          "
+        >
+          Excluir
+        </button>
 
-    return;
-  }
+      </div>
+
+    </article>
+
+  `;
+
+}
 
 
-  closeModal(
-    "financeModal"
+
+// =========================================================
+// MONTH BUTTONS
+// =========================================================
+
+document
+  .getElementById(
+    "finance-current-month-button"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      state.financeMonth =
+        getCurrentMonth();
+
+
+      await reloadFinanceView();
+
+    }
   );
 
 
-  clearFinanceForm();
+
+document
+  .getElementById(
+    "finance-next-month-button"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      state.financeMonth =
+        addMonths(
+          getCurrentMonth(),
+          1
+        );
 
 
-  await loadFinances();
+      await reloadFinanceView();
+
+    }
+  );
 
 
-  renderHome();
+
+document
+  .getElementById(
+    "finance-prev-month"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      state.financeMonth =
+        addMonths(
+          state.financeMonth,
+          -1
+        );
+
+
+      await reloadFinanceView();
+
+    }
+  );
+
+
+
+document
+  .getElementById(
+    "finance-next-month"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      state.financeMonth =
+        addMonths(
+          state.financeMonth,
+          1
+        );
+
+
+      await reloadFinanceView();
+
+    }
+  );
+
+
+
+async function reloadFinanceView() {
+
+  try {
+
+    await loadFinance();
+
+    renderFinance();
+
+
+  } catch (error) {
+
+    showToast(
+      error.message
+    );
+
+  }
+
 }
 
 
+
+// =========================================================
+// CONTEXT FILTER
+// =========================================================
+
+document
+  .getElementById(
+    "finance-context-filter"
+  )
+  .addEventListener(
+    "change",
+    async event => {
+
+      state.financeContext =
+        event.target.value.trim();
+
+
+      await reloadFinanceView();
+
+    }
+  );
+
+
+
+document
+  .getElementById(
+    "clear-context-filter"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      state.financeContext = "";
+
+
+      document
+        .getElementById(
+          "finance-context-filter"
+        )
+        .value = "";
+
+
+      await reloadFinanceView();
+
+    }
+  );
+
+
+
+// =========================================================
+// FINANCE MODAL
+// =========================================================
+
+document
+  .getElementById(
+    "new-finance-button"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "finance-date"
+        )
+        .value =
+          todayLocal();
+
+
+      openModal(
+        "finance-modal"
+      );
+
+
+      updateFinanceForm();
+
+    }
+  );
+
+
+
+document
+  .getElementById(
+    "finance-type"
+  )
+  .addEventListener(
+    "change",
+    updateFinanceForm
+  );
+
+
+
+document
+  .getElementById(
+    "finance-payment-method"
+  )
+  .addEventListener(
+    "change",
+    updateFinanceForm
+  );
+
+
+
+function updateFinanceForm() {
+
+  const type =
+    valueOf(
+      "finance-type"
+    );
+
+
+  const payment =
+    valueOf(
+      "finance-payment-method"
+    );
+
+
+  const isExpense =
+    type === "expense";
+
+
+  const isCredit =
+    payment === "credit" &&
+    isExpense;
+
+
+  document
+    .getElementById(
+      "expense-options"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      !isExpense
+    );
+
+
+  document
+    .getElementById(
+      "reference-month-wrapper"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      isCredit
+    );
+
+
+  document
+    .getElementById(
+      "credit-auto-message"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      !isCredit
+    );
+
+}
+
+
+
+// =========================================================
+// CREATE FINANCE
+// =========================================================
+
+document
+  .getElementById(
+    "finance-form"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      const type =
+        valueOf(
+          "finance-type"
+        );
+
+
+      const paymentMethod =
+        type === "expense"
+          ? valueOf(
+              "finance-payment-method"
+            )
+          : "other";
+
+
+      const referenceChoice =
+        valueOf(
+          "finance-reference-month"
+        );
+
+
+      const date =
+        valueOf(
+          "finance-date"
+        );
+
+
+      let referenceMonth =
+        date.slice(
+          0,
+          7
+        );
+
+
+      if (
+        referenceChoice ===
+        "next"
+      ) {
+
+        referenceMonth =
+          "next";
+
+      }
+
+
+      const body = {
+
+        type,
+
+        description:
+          valueOf(
+            "finance-description"
+          ),
+
+        amount:
+          Number(
+            valueOf(
+              "finance-amount"
+            )
+          ),
+
+        date,
+
+        category:
+          type === "income"
+            ? "Recebimento"
+            : (
+                paymentMethod ===
+                "credit"
+                  ? "Crédito"
+                  : "Compra"
+              ),
+
+        payment_method:
+          paymentMethod,
+
+        context:
+          valueOf(
+            "finance-context"
+          ),
+
+        reference_month:
+          referenceMonth
+
+      };
+
+
+      try {
+
+        const result =
+          await api(
+            "/finances",
+            {
+
+              method:
+                "POST",
+
+              body:
+                JSON.stringify(
+                  body
+                )
+
+            }
+          );
+
+
+        closeModal(
+          "finance-modal"
+        );
+
+
+        event.target
+          .reset();
+
+
+        document
+          .getElementById(
+            "finance-date"
+          )
+          .value =
+            todayLocal();
+
+
+        state.financeMonth =
+          result.reference_month;
+
+
+        await Promise.all([
+          loadFinance(),
+          loadHomeFinance()
+        ]);
+
+
+        renderFinance();
+
+        renderHome();
+
+
+        showToast(
+          `Lançado em ${result.reference_month_label}`
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+
+
+// =========================================================
+// DELETE FINANCE
+// =========================================================
 
 async function deleteFinance(
   id
@@ -1550,244 +2276,41 @@ async function deleteFinance(
   }
 
 
-  const result =
+  try {
+
     await api(
       `/finances/${id}`,
       {
-        method: "DELETE"
+        method:
+          "DELETE"
       }
     );
 
 
-  if (!result.ok) {
+    await Promise.all([
+      loadFinance(),
+      loadHomeFinance()
+    ]);
 
-    alert(
-      result.error
+
+    renderFinance();
+
+    renderHome();
+
+
+    showToast(
+      "Lançamento excluído"
     );
 
-    return;
+
+  } catch (error) {
+
+    showToast(
+      error.message
+    );
+
   }
 
-
-  await loadFinances();
-
-
-  renderHome();
-}
-
-
-
-// =========================================================
-// HOME
-// =========================================================
-
-function renderHome() {
-
-  const pending =
-    tasks.filter(
-      task =>
-        task.status ===
-        "pending"
-    );
-
-
-  document
-    .getElementById(
-      "homePendingTasks"
-    )
-    .textContent =
-      pending.length;
-
-
-  const income =
-    finances
-      .filter(
-        item =>
-          item.type ===
-          "income"
-      )
-      .reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum +
-          Number(
-            item.amount
-          ),
-        0
-      );
-
-
-  const expenses =
-    finances
-      .filter(
-        item =>
-          item.type ===
-          "expense"
-      )
-      .reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum +
-          Number(
-            item.amount
-          ),
-        0
-      );
-
-
-  document
-    .getElementById(
-      "homeBalance"
-    )
-    .textContent =
-      money(
-        income -
-        expenses
-      );
-
-
-  const homeTasks =
-    document.getElementById(
-      "homeTasks"
-    );
-
-
-  if (!pending.length) {
-
-    homeTasks.innerHTML = `
-      <div class="empty">
-        Nenhuma tarefa pendente.
-      </div>
-    `;
-
-  } else {
-
-    homeTasks.innerHTML =
-      pending
-        .slice(0, 3)
-        .map(
-          task => `
-
-            <article
-              class="list-card"
-            >
-
-              <div
-                class="
-                  list-card-content
-                "
-              >
-
-                <h3>
-                  ${
-                    escapeHtml(
-                      task.title
-                    )
-                  }
-                </h3>
-
-
-                ${
-                  Number(
-                    task.reminder_enabled
-                  ) === 1
-
-                    ? `
-                      <div
-                        class="reminder-badge"
-                      >
-                        🔔 A cada 2 horas
-                      </div>
-                    `
-
-                    : ""
-                }
-
-              </div>
-
-            </article>
-
-          `
-        )
-        .join("");
-  }
-
-
-  const homeStudies =
-    document.getElementById(
-      "homeStudies"
-    );
-
-
-  if (!studies.length) {
-
-    homeStudies.innerHTML = `
-      <div class="empty">
-        Nenhum estudo cadastrado.
-      </div>
-    `;
-
-  } else {
-
-    homeStudies.innerHTML =
-      studies
-        .slice(0, 3)
-        .map(
-          study => `
-
-            <article
-              class="list-card"
-            >
-
-              <div
-                class="
-                  list-card-content
-                "
-              >
-
-                <h3>
-                  ${
-                    escapeHtml(
-                      study.subject
-                    )
-                  }
-                </h3>
-
-
-                <p>
-                  ${
-                    escapeHtml(
-                      study.topic || ""
-                    )
-                  }
-                </p>
-
-
-                <div
-                  class="progress"
-                >
-
-                  <div
-                    style="
-                      width:
-                      ${study.progress}%;
-                    "
-                  ></div>
-
-                </div>
-
-              </div>
-
-            </article>
-
-          `
-        )
-        .join("");
-  }
 }
 
 
@@ -1796,226 +2319,213 @@ function renderHome() {
 // MODALS
 // =========================================================
 
-function openTaskModal() {
+document
+  .querySelectorAll(
+    ".close-modal"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        closeModal(
+          button.dataset.close
+        );
+
+      }
+    );
+
+  });
+
+
+
+document
+  .querySelectorAll(
+    ".modal-backdrop"
+  )
+  .forEach(backdrop => {
+
+    backdrop.addEventListener(
+      "click",
+      () => {
+
+        const modal =
+          backdrop.closest(
+            ".modal"
+          );
+
+
+        modal.classList
+          .add("hidden");
+
+      }
+    );
+
+  });
+
+
+
+function openModal(id) {
 
   document
-    .getElementById(
-      "taskModal"
-    )
+    .getElementById(id)
     .classList
-    .add(
-      "open"
-    );
+    .remove("hidden");
+
 }
 
 
 
-function openStudyModal() {
+function closeModal(id) {
 
   document
-    .getElementById(
-      "studyModal"
-    )
+    .getElementById(id)
     .classList
-    .add(
-      "open"
-    );
+    .add("hidden");
+
 }
 
 
 
-function openFinanceModal() {
+// =========================================================
+// RENDER
+// =========================================================
 
-  const input =
-    document.getElementById(
-      "financeDate"
-    );
+function renderEverything() {
 
+  renderHome();
 
-  if (!input.value) {
+  renderTasks();
 
-    input.value =
-      localDateString(
-        new Date()
-      );
-  }
+  renderStudies();
 
+  renderCreditCard();
 
-  document
-    .getElementById(
-      "financeModal"
-    )
-    .classList
-    .add(
-      "open"
-    );
+  renderFinance();
+
 }
 
 
 
-function closeModal(
-  id
+// =========================================================
+// UI HELPERS
+// =========================================================
+
+function setLoading(
+  active
 ) {
 
-  document
-    .getElementById(
-      id
-    )
-    .classList
-    .remove(
-      "open"
+  loading.classList
+    .toggle(
+      "hidden",
+      !active
     );
+
 }
 
 
 
-// =========================================================
-// CLEAR FORMS
-// =========================================================
+function showError(
+  message
+) {
 
-function clearTaskForm() {
-
-  document
-    .getElementById(
-      "taskTitle"
-    )
-    .value = "";
+  errorBox.textContent =
+    message;
 
 
-  document
-    .getElementById(
-      "taskDescription"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "taskDueDate"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "taskReminderEnabled"
-    )
-    .checked = false;
-
-
-  document
-    .getElementById(
-      "taskReminderAt"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "reminderFields"
-    )
-    .classList
-    .add(
+  errorBox.classList
+    .remove(
       "hidden"
     );
+
 }
 
 
 
-function clearStudyForm() {
-
-  document
-    .getElementById(
-      "studySubject"
-    )
-    .value = "";
+let toastTimer;
 
 
-  document
-    .getElementById(
-      "studyTopic"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "studyProgress"
-    )
-    .value = 0;
-
-
-  document
-    .getElementById(
-      "studyNotes"
-    )
-    .value = "";
-}
-
-
-
-function clearFinanceForm() {
-
-  document
-    .getElementById(
-      "financeDescription"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "financeAmount"
-    )
-    .value = "";
-
-
-  document
-    .getElementById(
-      "financeCategory"
-    )
-    .value = "";
-}
-
-
-
-// =========================================================
-// TELEGRAM FEEDBACK
-// =========================================================
-
-function telegramHaptic(
-  type
+function showToast(
+  message
 ) {
 
-  try {
+  toast.textContent =
+    message;
 
-    if (
-      type === "success"
-    ) {
 
-      tg?.HapticFeedback
-        ?.notificationOccurred(
-          "success"
-        );
+  toast.classList
+    .remove(
+      "hidden"
+    );
 
-    } else {
 
-      tg?.HapticFeedback
-        ?.impactOccurred(
-          "medium"
-        );
-    }
+  clearTimeout(
+    toastTimer
+  );
 
-  } catch {}
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList
+          .add(
+            "hidden"
+          );
+
+      },
+      2600
+    );
+
+}
+
+
+
+function emptyState(
+  text
+) {
+
+  return `
+    <div class="empty">
+      ${escapeHtml(text)}
+    </div>
+  `;
+
+}
+
+
+
+function setText(
+  id,
+  value
+) {
+
+  document
+    .getElementById(id)
+    .textContent =
+      value;
+
+}
+
+
+
+function valueOf(id) {
+
+  return document
+    .getElementById(id)
+    .value
+    .trim();
+
 }
 
 
 
 // =========================================================
-// HELPERS
+// MONEY
 // =========================================================
 
-function money(
+function formatMoney(
   value
 ) {
 
@@ -2023,8 +2533,10 @@ function money(
     .NumberFormat(
       "pt-BR",
       {
-        style: "currency",
-        currency: "BRL"
+        style:
+          "currency",
+        currency:
+          "BRL"
       }
     )
     .format(
@@ -2032,6 +2544,105 @@ function money(
         value || 0
       )
     );
+
+}
+
+
+
+// =========================================================
+// DATE
+// =========================================================
+
+function getCurrentMonth() {
+
+  const now =
+    new Date();
+
+
+  return (
+    `${now.getFullYear()}-` +
+    `${String(
+      now.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
+
+}
+
+
+
+function addMonths(
+  referenceMonth,
+  amount
+) {
+
+  const [
+    year,
+    month
+  ] =
+    referenceMonth
+      .split("-")
+      .map(Number);
+
+
+  const date =
+    new Date(
+      year,
+      month - 1 + amount,
+      1
+    );
+
+
+  return (
+    `${date.getFullYear()}-` +
+    `${String(
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
+
+}
+
+
+
+function todayLocal() {
+
+  const now =
+    new Date();
+
+
+  const year =
+    now.getFullYear();
+
+
+  const month =
+    String(
+      now.getMonth() + 1
+    )
+      .padStart(
+        2,
+        "0"
+      );
+
+
+  const day =
+    String(
+      now.getDate()
+    )
+      .padStart(
+        2,
+        "0"
+      );
+
+
+  return (
+    `${year}-${month}-${day}`
+  );
+
 }
 
 
@@ -2056,162 +2667,94 @@ function formatDate(
   return (
     `${day}/${month}/${year}`
   );
+
 }
 
 
 
-function formatDateTime(
-  value
-) {
-
-  if (!value) {
-    return "";
-  }
-
-
-  const date =
-    new Date(value);
-
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-
-    return "";
-  }
-
-
-  return new Intl
-    .DateTimeFormat(
-      "pt-BR",
-      {
-
-        day: "2-digit",
-
-        month: "2-digit",
-
-        hour: "2-digit",
-
-        minute: "2-digit"
-
-      }
-    )
-    .format(
-      date
-    );
-}
-
-
-
-function dateToLocalInput(
-  date
-) {
-
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  const hour =
-    String(
-      date.getHours()
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  const minute =
-    String(
-      date.getMinutes()
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    `${year}-${month}-${day}` +
-    `T${hour}:${minute}`
-  );
-}
-
-
-
-function localDateString(
-  date
-) {
-
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    `${year}-${month}-${day}`
-  );
-}
-
-
+// =========================================================
+// TEXT
+// =========================================================
 
 function escapeHtml(
   value
 ) {
 
-  const div =
-    document
-      .createElement(
-        "div"
-      );
-
-
-  div.textContent =
-    String(
-      value ?? ""
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
     );
 
-
-  return div.innerHTML;
 }
+
+
+
+function capitalize(
+  value
+) {
+
+  return String(
+    value || ""
+  )
+    .split(" ")
+    .map(word => {
+
+      if (!word) {
+        return "";
+      }
+
+
+      return (
+        word.charAt(0)
+          .toUpperCase() +
+        word.slice(1)
+      );
+
+    })
+    .join(" ");
+
+}
+
+
+
+// =========================================================
+// GLOBAL FUNCTIONS
+// =========================================================
+
+window.toggleTask =
+  toggleTask;
+
+
+window.disableReminder =
+  disableReminder;
+
+
+window.deleteTask =
+  deleteTask;
+
+
+window.deleteStudy =
+  deleteStudy;
+
+
+window.deleteFinance =
+  deleteFinance;
